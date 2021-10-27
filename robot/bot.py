@@ -38,6 +38,7 @@ class NonHolonomicBot(Agent):
         self.head_samples=self.head+self.head_noise
         
     def update_noise(self):
+        print('update_noise_bot')
         self.linear_velocity_noise=self.linear_velocity_noise+self.linear_velocity_control_noise*self.dt
         self.angular_velocity_noise=self.angular_velocity_noise+self.angular_velocity_control_noise*self.dt
         controls=np.vstack((self.linear_velocity_noise,self.angular_velocity_noise)).T
@@ -51,10 +52,11 @@ class NonHolonomicBot(Agent):
         self.linear_velocity_control_noise = controls_noise[:,0]
         self.angular_velocity_control_noise = controls_noise[:,1]
         self.velocity_noise=self.linear_velocity_samples[...,np.newaxis]*np.array([np.cos(self.head_samples+self.angular_velocity_samples*self.dt),np.sin(self.head_samples+self.angular_velocity_samples*self.dt)]).T-self.velocity
-        self.update_noise_samples()
         self.update_samples_non_holonomic()
+        super().update_noise()
 
     def update_samples_non_holonomic(self):
+        print('update_noise_bot_nh')
         self.linear_velocity_samples=self.linear_velocity+self.linear_velocity_noise        
         self.angular_velocity_samples=self.angular_velocity+self.angular_velocity_noise
         self.head_samples=self.head+self.head_noise
@@ -100,7 +102,6 @@ class NonHolonomicBot(Agent):
         velocity1=velocity1[:,np.newaxis,:]
         velocity=np.append(velocity,velocity1, axis=1)
         cost=np.linalg.norm(velocity-desired_velocity,axis=1)
-        
         '''
         pos_noise=self.position
         #pos_noise=np.mean(self.position_noise,axis=0)
@@ -170,6 +171,17 @@ class NonHolonomicBot(Agent):
         self.ang_ctrl=w_list
         #self.controls = np.vstack((v_list,w_list)).T
         
+    def collision_cones(self, obstacle):
+        v=self.velocity_samples.reshape(self.noise_samples,1,2)
+        r=self.position_samples.reshape(self.noise_samples,1,2)
+        vo=obstacle.velocity_samples.reshape(1,obstacle.noise_samples,2)
+        ro=obstacle.position_samples.reshape(1,obstacle.noise_samples,2)
+        vr=v-vo
+        rr=r-ro
+        cones=np.square(np.sum(vr*rr, axis=2))+ np.sum(np.square(vr), axis=2)*((R)**2 - np.sum(np.square(rr), axis=2))
+        cones=cones.flatten()
+        return cone
+
 class HolonomicBot(Agent):
     def __init__(self, position, goal, noise_params, noise_samples=10000, radius=1, dt=1/10, sensor_range=7, name='Bot'):
         self.sensor_range = sensor_range

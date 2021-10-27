@@ -30,6 +30,7 @@ class Agent:
         return self.name
 
     def update_samples(self):
+        print('update_samples')
         self.position_samples=self.position+self.position_noise-np.mean(self.position_noise)
         self.velocity_samples=self.velocity+self.velocity_noise
 
@@ -40,17 +41,19 @@ class Agent:
         means=params['means']
         stds=params['stds']
         if(means.ndim==1):
-            return np.vstack((np.random.randn(round(samples*weights[0]),1)*stds[0]+means[0], np.random.randn(samples-round(samples*weights[0]),1)*stds[1]+means[1]))
+            return np.vstack((np.random.randn(np.int16(round(samples*weights[0])),1)*stds[0]+means[0], np.random.randn(samples-np.int16(round(samples*weights[0])),1)*stds[1]+means[1]))
         else:
             cols=means.shape[0]
-            return np.vstack((np.random.randn(round(samples*weights[0]),cols)*stds[:,0]+means[:,0], np.random.randn(samples-round(samples*weights[0]),cols)*stds[:,1]+means[:,1]))
+            return np.vstack((np.random.randn(np.int16(round(samples*weights[0])),cols)*stds[:,0]+means[:,0], np.random.randn(samples-np.int16(round(samples*weights[0])),cols)*stds[:,1]+means[:,1]))
 
-    def update_noise_samples(self):
+    def update_noise(self):
+        print('update_noise_core')
         self.position_noise=self.position_noise+self.velocity_noise*self.dt
         dist_boolean_list=np.linalg.norm(self.position_noise, axis=1)>self.filter_radius
         new_samples_count=np.count_nonzero(dist_boolean_list)
         if(new_samples_count>0):
             self.position_noise[dist_boolean_list,:]= self.get_noise_samples(self.noise_params['position'], samples=new_samples_count)
+        self.update_samples()       
 
     def get_position(self):
         return self.position
@@ -72,15 +75,12 @@ class Agent:
     def set_velocity(self, velocity=None):
         if velocity is None:
             self.set_position(self.get_position() + self.velocity * self.dt)
-            self.update_noise_samples()
-            self.velocity_noise=self.get_noise_samples(self.noise_params['velocity'])
         else:
             if(self.goal_reached()):
                self.velocity=np.array([0,0])
             else:    
                self.velocity=velocity
                self.set_position(self.get_position() + self.velocity * self.dt)
-        self.update_samples()       
 
 
     

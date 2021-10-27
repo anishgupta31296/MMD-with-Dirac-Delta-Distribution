@@ -58,7 +58,7 @@ def main():
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    planner=Planner(gamma=0.01,reduced_samples=25,device='cuda:0')
+    planner=Planner(gamma=0.01,reduced_samples=25)
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
 
         obstacles_in_range = []
@@ -102,22 +102,16 @@ def main():
             random.shuffle(obstacle_positional_noise)
             for i in range(samples):
                 ax.add_artist(plt.Circle(obstacle_positional_noise[i], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.1))
-
         plt.draw()
         plt.pause(0.001)
         if(save==1):
             plt.gcf().savefig('run/{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
-        '''
         plt.gcf().savefig('{}/{}.png'.format(args.out, str(counter).zfill(4)), dpi=300)
         if len(obstacles_in_range) > 0:
             for i in range(len(obstacles_in_range)):
                 fig = plt.figure()
-                # kdeplot(planner.optimizer.initial_distributions['cones'][i], label='Initial Cones', shade=True)
                 x = np.linspace(-1000, 1000, int(args.kld_samples))
-                # plt.plot(x, np.exp(planner.optimizer.initial_distributions['gmms'][i]), label='Initial GMM',)
                 plt.plot(x, planner.optimizer.final_distributions['desired'], label='Desired', color='#059efb')
-                # plt.plot(x, np.exp(planner.optimizer.final_distributions['gmms'][i]), label='Final GMM')
-                # gmms.append(np.exp(planner.optimizer.final_distributions['gmms'][i]))
                 ax = kdeplot(planner.optimizer.final_distributions['cones'][i], label='Final Cones', shade=True, color='#ffa804')
                 cones.append(planner.optimizer.final_distributions['cones'][i])
                 ax.axvline(x=0)
@@ -127,6 +121,7 @@ def main():
                 fig.savefig('{}/dist-{}.png'.format(args.out, str(counter).zfill(4)), dpi=300)
                 # plt.show()
                 plt.close(fig)
+        '''
         else:
             fig = plt.figure()
             ax = fig.add_subplot(1,1,1)
