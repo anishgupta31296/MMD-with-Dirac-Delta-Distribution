@@ -43,7 +43,7 @@ ry=ay-oy
 
 cones1=(vx*rx + vy*ry)**2 + (vx**2 + vy**2)*((R)**2 - (rx**2 + ry**2))
 print(timeit.default_timer() - start)
-
+a
 r=r.reshape(1,samples,1,2)
 vo=vo.reshape(1,1,samples,2)
 ro=ro.reshape(1,1,samples,2)
