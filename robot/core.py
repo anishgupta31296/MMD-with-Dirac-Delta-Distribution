@@ -2,6 +2,7 @@
 
 import numpy as np
 import math
+import random
 
 class Agent:
 
@@ -25,13 +26,13 @@ class Agent:
         self.reduced_position_noise=None
         self.reduced_velocity_noise=None
         self.reduced_coeffs=None
+        Agent.update_samples(self)
         
     def __str__(self):
         return self.name
 
     def update_samples(self):
-        print('update_samples')
-        self.position_samples=self.position+self.position_noise-np.mean(self.position_noise)
+        self.position_samples=self.position+self.position_noise
         self.velocity_samples=self.velocity+self.velocity_noise
 
     def get_noise_samples(self, params, samples=None):
@@ -47,13 +48,12 @@ class Agent:
             return np.vstack((np.random.randn(np.int16(round(samples*weights[0])),cols)*stds[:,0]+means[:,0], np.random.randn(samples-np.int16(round(samples*weights[0])),cols)*stds[:,1]+means[:,1]))
 
     def update_noise(self):
-        print('update_noise_core')
         self.position_noise=self.position_noise+self.velocity_noise*self.dt
         dist_boolean_list=np.linalg.norm(self.position_noise, axis=1)>self.filter_radius
         new_samples_count=np.count_nonzero(dist_boolean_list)
         if(new_samples_count>0):
             self.position_noise[dist_boolean_list,:]= self.get_noise_samples(self.noise_params['position'], samples=new_samples_count)
-        self.update_samples()       
+        Agent.update_samples(self)
 
     def get_position(self):
         return self.position
@@ -92,6 +92,24 @@ class Agent:
         v = self.get_velocity() - obstacle.get_velocity()
         cone = ((r @ v) / v.__pow__(2).sum()) - r.__pow__(2).sum() + (self.radius + obstacle.radius).__pow__(2)
         return cone
+
+    def collision_cones(self, obstacle, samples):
+        i=random.sample(range(self.noise_samples),samples)
+        j=random.sample(range(self.noise_samples),samples)
+        v=self.velocity_samples[i].reshape(samples,1,2)
+        r=self.position_samples[i].reshape(samples,1,2)
+        vo=obstacle.velocity_samples[j].reshape(1,samples,2)
+        ro=obstacle.position_samples[j].reshape(1,samples,2)
+        vr=v-vo
+        rr=r-ro
+        vr1=vr.reshape(samples*samples,2)
+        rr1=rr.reshape(samples*samples,2)
+        vx=vr1[:,0]
+        vy=vr1[:,1]
+        rx=rr1[:,0]
+        ry=rr1[:,1]
+        cones=(vx*rx + vy*ry)**2 + (vx**2 + vy**2)*((self.radius + obstacle.radius)**2 - (rx**2 + ry**2))
+        return cones
 
     def is_colliding(self, obstacle):
         if self.collision_cone(obstacle) > 0:
