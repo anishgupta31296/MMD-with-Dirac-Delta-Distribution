@@ -125,7 +125,7 @@ class NonHolonomicBot(Agent):
         self.set_velocity(velocity)
         self.update_noise()
   
-    def sample_controls(self,samples=10):
+    def sample_controls(self,samples=20):
         agent_v=np.array([self.get_linear_velocity(),self.get_angular_velocity()])
         bounds=self.get_bounds()
         v_ctr_bounds=self.get_linear_velocity_control_bounds()
