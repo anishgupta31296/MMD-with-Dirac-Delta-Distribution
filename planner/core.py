@@ -28,19 +28,19 @@ class Planner:
         agent_p_samples=control_samples[:,2:4,:]
         head_samples=control_samples[:,4,:]
         control_samples=control_samples[:,0:2,:]
-        Agent.reduced_position_noise=agent_p_samples[self.j,:,:]
-        Agent.reduced_controls_samples=control_samples[self.j,:,:]
-        Agent.reduced_head_samples=head_samples[self.j]
-        Agent.control_coeff=control_coeff[self.j]
+        Agent.reduced_position_noise=agent_p_samples
+        Agent.reduced_controls_samples=control_samples
+        Agent.reduced_head_samples=head_samples
+        Agent.control_coeff=control_coeff[self.i]
         MMD_cost=[]
         for x in range(len(Obstacles)):
             MMD_cost.append(np.zeros(control_samples.shape[0]))
             obs_para, obs_coeff=self.reduced_sets_method(np.hstack((Obstacles[x].position_samples, Obstacles[x].velocity_samples)) ,self.reduced_samples) 
             obs_velocity=obs_para[:,2:4,:]
             obs_position=obs_para[:,0:2,:]
-            Obstacles[x].reduced_position_noise=obs_position[self.i,:,:]
-            Obstacles[x].reduced_velocity_noise=obs_velocity[self.i,:,:]
-            Obstacles[x].reduced_coeffs=obs_coeff[self.i]
+            Obstacles[x].reduced_position_noise=obs_position
+            Obstacles[x].reduced_velocity_noise=obs_velocity
+            Obstacles[x].reduced_coeffs=obs_coeff[self.j]
             R=Agent.radius+Obstacles[x].radius
             MMD_cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
         return MMD_cost    

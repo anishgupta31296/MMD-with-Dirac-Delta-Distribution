@@ -4,6 +4,7 @@ import torch
 
 class MMD:
     def __init__(self, gamma, reduced_samples, device):
+        self.reduced_samples=reduced_samples
         self.reduced_samples_grid=reduced_samples*reduced_samples
         self.dirac_delta_distribution=np.random.randn(self.reduced_samples_grid,1)*0.00000000001
         self.gamma=gamma
@@ -31,26 +32,22 @@ class MMD:
         c=self.MMD_dirac_delta_cost(a,a_coeffs)
         return c    
         
-    def collision_cones(self, lin_ctrl, ang_ctrl,head_samples, v, w,ap,op,ov ,R,dt,control_samples):
-        lin_ctrl=lin_ctrl.reshape(lin_ctrl.shape[0],1)
-        ang_ctrl=ang_ctrl.reshape(ang_ctrl.shape[0],1)        
-        lin_ctrl=np.tile(lin_ctrl,(1,self.reduced_samples_grid))
-        ang_ctrl=np.tile(ang_ctrl,(1,self.reduced_samples_grid))
-        ax=ap[:,0].reshape(1,self.reduced_samples_grid)
-        ay=ap[:,1].reshape(1,self.reduced_samples_grid)
-        ox=op[:,0].reshape(1,self.reduced_samples_grid)
-        oy=op[:,1].reshape(1,self.reduced_samples_grid)
-        ovx=ov[:,0].reshape(1,self.reduced_samples_grid)
-        ovy=ov[:,1].reshape(1,self.reduced_samples_grid)
-        head_samples=head_samples.reshape(1,self.reduced_samples_grid)
-        v_samples=control_samples[:,0].reshape(1,self.reduced_samples_grid)
-        w_samples=control_samples[:,1].reshape(1,self.reduced_samples_grid)
-        #print(lin_ctrl.shape,head_samples.shape,ang_ctrl.shape,control_samples.shape,ovx.shape)
-        vx=(v+lin_ctrl+v_samples)*np.cos(head_samples+(w+ang_ctrl+w_samples)*dt)-ovx
-        vy=(v+lin_ctrl+v_samples)*np.sin(head_samples+(w+ang_ctrl+w_samples)*dt)-ovy
-        rx=ax-ox
-        ry=ay-oy
-        return (vx*rx + vy*ry)**2 + (vx**2 + vy**2)*((R)**2 - (rx**2 + ry**2))
+    def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
+        r1=ap.reshape(1,self.reduced_samples,1,2)
+        vo1=ov.reshape(1,1,self.reduced_samples,2)
+        ro1=op.reshape(1,1,self.reduced_samples,2)
+        h1=h.reshape(1,self.reduced_samples,1,1)
+        v_c=control_samples[:,0].reshape(1,self.reduced_samples,1,1)
+        w_c=control_samples[:,1].reshape(1,self.reduced_samples,1,1)
+        l_ctrl1=lin_ctrl.reshape(lin_ctrl.shape[0],1,1,1)
+        a_ctrl1=ang_ctrl.reshape(ang_ctrl.shape[0],1,1,1)
+        nh_v=(l_ctrl1+v+v_c)*np.concatenate((np.cos(h1+(a_ctrl1+w+w_c)*dt), np.sin(h1+(a_ctrl1+w+w_c)*dt)),axis=3)
+        vr=nh_v-vo1
+        rr=r1-ro1
+        cones=np.square(np.sum(vr*rr, axis=3))+ np.sum(np.square(vr), axis=3)*((R)**2 - np.sum(np.square(rr), axis=3))
+        cones=cones.reshape(lin_ctrl.shape[0],self.reduced_samples_grid)
+        print(cones.shape)
+        return cones
 
     def MMD_dirac_delta_cost(self,a,a_coeffs):
         kernel_xx = torch.exp(-self.gamma*torch.pow(a@self.ones_mat-(a@self.ones_mat).transpose(2,1),2)) 
