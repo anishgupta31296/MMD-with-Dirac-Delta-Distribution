@@ -222,3 +222,4 @@ class HolonomicBot(Agent):
         vy_list=vy_list[y]
         controls = np.vstack((vx_list,vy_list)).T
         return self.controls
+        print('55')
