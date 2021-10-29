@@ -8,9 +8,10 @@ from robot.obstacle import Obstacle
 from planner.core import *
 import timeit
 import random
+import os
 
 def main():
-
+    os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
     alpha=1
     beta=0.01
     save=1
@@ -53,12 +54,12 @@ def main():
     
     bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
     obstacles = []
-    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    planner=Planner(gamma=0.01,reduced_samples=25,device='cuda:0')
+    planner=Planner(gamma=0.1,reduced_samples=25,device='cuda:0')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
 
         obstacles_in_range = []
@@ -103,35 +104,21 @@ def main():
         plt.draw()
         plt.pause(0.001)
         if(save==1):
-            plt.gcf().savefig('run/{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
+            plt.gcf().savefig('../MMD Python Outputs/{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
         if len(obstacles_in_range) > 0:
             for i in range(len(obstacles_in_range)):
                 fig = plt.figure()
-                #x = np.linspace(-1000, 1000, int(args.kld_samples))
-                #plt.plot(x, planner.optimizer.final_distributions['desired'], label='Desired', color='#059efb')
+                plt.arrow(0, 0, 0, 0.15,width=0.2,length_includes_head=True, head_width=0.7, head_length=0.005,color='black')
                 cones=bot.collision_cones(obstacles[i],1000)
+                cones[cones<0]=0
                 ax = kdeplot(cones, label='Final Cones', shade=True, color='#ffa804')
-                ax.axvline(x=0)
-                ax.set_xlim((-100, 100))
-                ax.set_ylim((0, 0.08))
+                #ax.axvline(x=0)
+                ax.set_xlim((-5, 25))
+                ax.set_ylim((0, 0.15))
                 # ax.axvline(x=0)
-                fig.savefig('run/dist-{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
+                fig.savefig('../MMD Python Outputs/dist-{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
                 # plt.show()
                 plt.close(fig)
-        '''
-        else:
-            fig = plt.figure()
-            ax = fig.add_subplot(1,1,1)
-            ax.axvline(x=0)
-            ax.set_xlim((-100, 100))
-            ax.set_ylim((0, 0.08))
-            fig.savefig('{}/dist-{}.png'.format(args.out, str(counter).zfill(4)), dpi=300)
-            # plt.show()
-            plt.close(fig)
-        plt.pause(1/100)
-        counter += 1
-        # time.sleep(1/10)
-        '''
 
 if __name__ == '__main__':
     main()
