@@ -209,7 +209,7 @@ class HolonomicBot(Agent):
         controls[1] = min(vx_bnds[1], controls[1])
         self.set_velocity(controls)
   
-    def sample_controls(self,samples=20):
+    def sample_controls(self,samples=22):
         agent_v=np.array([self.get_linear_velocity(),self.get_angular_velocity()])
         vx_bounds=self.get_x_velocity_control_bounds()
         vy_bounds=self.get_y_velocity_control_bounds()
