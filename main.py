@@ -13,8 +13,9 @@ import os
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
     alpha=1
-    beta=0.01
+    beta=0.05
     save=1
+    dist=1
     times=[]
 
     agent_noise_params = {
@@ -83,7 +84,7 @@ def main():
         #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
         bot.set_controls(planner.optimal_control)
         times.append(timeit.default_timer() - start)
-        
+        print(times[-1])
         #print(np.array(times).mean())
         #bot.set_linear_acceleration(control)
         #.append(bot.get_linear_velocity())
@@ -105,11 +106,11 @@ def main():
         plt.pause(0.001)
         if(save==1):
             plt.gcf().savefig('../MMD Python Outputs/{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
-        if len(obstacles_in_range) > 0:
+        if len(obstacles_in_range) > 0 and dist==1:
             for i in range(len(obstacles_in_range)):
                 fig = plt.figure()
                 plt.arrow(0, 0, 0, 0.15,width=0.2,length_includes_head=True, head_width=0.7, head_length=0.005,color='black')
-                cones=bot.collision_cones(obstacles[i],1000)
+                cones=bot.collision_cones(obstacles[i],100)
                 cones[cones<0]=0
                 ax = kdeplot(cones, label='Final Cones', shade=True, color='#ffa804')
                 #ax.axvline(x=0)
