@@ -14,8 +14,11 @@ def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
     alpha=1
     beta=0.05
+    gamma=0.1
     save=1
     dist=1
+    samples_to_plot = 50
+
     times=[]
 
     agent_noise_params = {
@@ -60,7 +63,7 @@ def main():
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    planner=Planner(gamma=0.1,reduced_samples=25,device='cuda:0')
+    planner=Planner(gamma=gamma,reduced_samples=20,device='cuda:0')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
 
         obstacles_in_range = []
@@ -91,17 +94,13 @@ def main():
         ax.add_artist(plt.Circle(bot.get_position(), bot.radius, facecolor='#059efb', edgecolor='black', zorder=100))
         plt.plot(np.array(bot.path)[:,0], np.array(bot.path)[:,1], '#059efb', zorder=2)
         plt.arrow(bot.get_position()[0], bot.get_position()[1], 1.5*bot.get_velocity()[0], 1.5*bot.get_velocity()[1],length_includes_head=True, head_width=0.3, head_length=0.2)
-        samples = 50
-        bot_positional_noise = bot.position_samples
-        random.shuffle(bot_positional_noise)
-        for i in range(samples):
-            ax.add_artist(plt.Circle(bot_positional_noise[i], bot.radius, color='#059efb', zorder=3, alpha=0.1))
+        itr=random.sample(range(10000),samples_to_plot)
+        for i in range(samples_to_plot):
+            ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.1))
         
         for j in range(len(obstacles)):
-            obstacle_positional_noise = obstacles[j].position_samples
-            random.shuffle(obstacle_positional_noise)
-            for i in range(samples):
-                ax.add_artist(plt.Circle(obstacle_positional_noise[i], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.1))
+            for i in range(samples_to_plot):
+                ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.1))
         plt.draw()
         plt.pause(0.001)
         if(save==1):
