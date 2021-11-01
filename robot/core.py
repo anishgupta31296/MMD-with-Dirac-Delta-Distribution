@@ -32,8 +32,8 @@ class Agent:
         return self.name
 
     def update_samples(self):
-        self.position_samples=self.position+self.position_noise-np.mean(self.position_noise,axis=0)
-        self.velocity_samples=self.velocity+self.velocity_noise-np.mean(self.position_noise,axis=0)
+        self.position_samples=self.position+self.position_noise
+        self.velocity_samples=self.velocity+self.velocity_noise
 
     def get_noise_samples(self, params, samples=None):
         if samples is None:
