@@ -33,6 +33,7 @@ class MMD:
         return c    
         
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
+        dt=5*dt
         r1=ap.reshape(1,self.reduced_samples,1,2)
         vo1=ov.reshape(1,1,self.reduced_samples,2)
         ro1=op.reshape(1,1,self.reduced_samples,2)
@@ -46,7 +47,6 @@ class MMD:
         rr=r1-ro1
         cones=np.square(np.sum(vr*rr, axis=3))+ np.sum(np.square(vr), axis=3)*((R)**2 - np.sum(np.square(rr), axis=3))
         cones=cones.reshape(lin_ctrl.shape[0],self.reduced_samples_grid)
-        print(cones.shape)
         return cones
 
     def MMD_dirac_delta_cost(self,a,a_coeffs):

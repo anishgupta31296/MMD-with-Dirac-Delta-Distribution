@@ -39,8 +39,8 @@ agent_noise_params = {
 obs_noise_params = {
     'position': {
         'weights': np.array([0.5, 0.5]),
-        'means': np.array([[-0.2, 0.0],[-0.0,0.0]]),
-        'stds': np.array([[0.0, 0.0],[0.0,0.0]])
+        'means': np.array([[-0.4, 0.1],[-0.2,0.05]]),
+        'stds': np.array([[0.15, 0.03],[0.2,0.03]])
     },
     'velocity': {
         'weights': np.array([0.3, 0.7]),
@@ -67,10 +67,10 @@ for i, obs in enumerate(obstacles):
 
 itr=random.sample(range(10000),samples)
 for i in range(samples):
-    ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.1))
+    ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.08))
 
 for j in range(len(obstacles)):
     for i in range(samples):
-        ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.1))
+        ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
 
 plt.show()

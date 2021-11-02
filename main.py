@@ -12,11 +12,12 @@ import os
 
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
+    sensor_range=8
     alpha=1
-    beta=0.05
+    beta=0.01
     gamma=0.1
-    save=1
-    dist=1
+    save=0
+    dist=0
     samples_to_plot = 50
 
     times=[]
@@ -24,18 +25,18 @@ def main():
     agent_noise_params = {
         'position': {
             'weights': np.array([0.5, 0.5]),
-            'means': np.array([[-0.1, 0.1],[0.075,-0.075]]),
-            'stds': np.array([[0.2, 0.2],[0.1,0.1]])
+            'means': np.array([[-0.0, 0.0],[0.0,-0.0]]),
+            'stds': np.array([[0.1, 0.1],[0.1,0.1]])
         },
         'velocity': {
             'weights': np.array([0.3, 0.7]),
-            'means': np.array([[-0.07, 0.03],[0.105,-0.045]]),
-            'stds': np.array([[0.01, 0.06],[0.02,0.03]])
+            'means': np.array([[-0.0, 0.0],[0.0,-0.0]]),
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         },
         'controls': {
             'weights': np.array([0.4, 0.6]),
-            'means': np.array([[-0.15, 0.1],[0.1,-0.667]]),
-            'stds': np.array([[0.01, 0.06],[0.04,0.02]])
+            'means': np.array([[-0.0, 0.0],[0.0,-0.0]]),
+            'stds': np.array([[0.01, 0.01],[0.04,0.01]])
         },
         'head': {
             'weights': np.array([0.5, 0.5]),
@@ -43,20 +44,33 @@ def main():
             'stds': np.array([0.0, 0.0])
         }        
     }
+    '''
     obs_noise_params = {
         'position': {
             'weights': np.array([0.5, 0.5]),
-            'means': np.array([[-0.15, 0.15],[-0.12,0.12]]),
-            'stds': np.array([[0.2, 0.2],[0.1,0.1]])
+            'means': np.array([[-0.4, 0.1],[-0.2,0.05]]),
+            'stds': np.array([[0.15, 0.03],[0.2,0.03]])
         },
         'velocity': {
             'weights': np.array([0.3, 0.7]),
-            'means': np.array([[-0.07, 0.03],[-0.05,0.0214]]),
-            'stds': np.array([[0.01, 0.06],[0.02,0.04]])
+            'means': np.array([[-0.0, 0.0],[-0.0,0.0]]),
+            'stds': np.array([[0.0, 0.0],[0.0,0.0]])
         }
     }
-    
-    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
+    '''
+    obs_noise_params = {
+        'position': {
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[0.4, -0.1],[-0.4,0.05]]),
+            'stds': np.array([[0.15, 0.15],[0.2,0.2]])
+        },
+        'velocity': {
+            'weights': np.array([0.3, 0.7]),
+            'means': np.array([[-0.0, 0.0],[-0.0,0.0]]),
+            'stds': np.array([[0.0, 0.0],[0.0,0.0]])
+        }
+    }    
+    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
     obstacles = []
     #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
@@ -87,7 +101,6 @@ def main():
         #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
         bot.set_controls(planner.optimal_control)
         times.append(timeit.default_timer() - start)
-        print(times[-1])
         #print(np.array(times).mean())
         #bot.set_linear_acceleration(control)
         #.append(bot.get_linear_velocity())

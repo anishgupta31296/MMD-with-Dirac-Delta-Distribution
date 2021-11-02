@@ -48,12 +48,14 @@ class Planner:
     def get_controls(self,Agent,Obstacles, alpha, beta):
         Agent.sample_controls()
         self.goal_reaching_cost=Agent.get_desired_velocity_cost()
+        self.goal_reaching_cost=(self.goal_reaching_cost-np.amin(self.goal_reaching_cost))/(np.amax(self.goal_reaching_cost)-np.amin(self.goal_reaching_cost))
         self.coll_avoidance_cost=0
         if(len(Obstacles)>0):
             coll_avoidance_cost_list=self.get_coll_avoidance_cost(Agent,Obstacles)
             self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
+            self.coll_avoidance_cost=(self.coll_avoidance_cost-np.amin(self.coll_avoidance_cost))/(np.amax(self.coll_avoidance_cost)-np.amin(self.coll_avoidance_cost))
         cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
-
+        print(np.amin(self.coll_avoidance_cost), np.amax(self.goal_reaching_cost))
         indcs=np.argmin(cost)
         #print(indcs)
         #if(isinstance(indcs,list)):
