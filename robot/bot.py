@@ -29,6 +29,9 @@ class NonHolonomicBot(Agent):
         self.linear_velocity_control_noise = controls_noise[:,0]
         self.angular_velocity_control_noise = controls_noise[:,1]
         self.head_noise=self.get_noise_samples(noise_params['head'])
+        v_noise=self.linear_velocity_noise+self.linear_velocity_control_noise*self.dt
+        w_noise=self.angular_velocity_noise+self.angular_velocity_control_noise*self.dt
+        self.controls_samples=np.hstack((v_noise.reshape(noise_samples,1),w_noise.reshape(noise_samples,1)))
         self.reduced_controls_samples=None
         self.reduced_head_noise=None
         self.linear_velocity_samples=self.linear_velocity+self.linear_velocity_noise
@@ -58,6 +61,9 @@ class NonHolonomicBot(Agent):
         self.linear_velocity_samples=self.linear_velocity+self.linear_velocity_noise        
         self.angular_velocity_samples=self.angular_velocity+self.angular_velocity_noise
         self.head_samples=self.head+self.head_noise
+        v_noise=self.linear_velocity_noise+self.linear_velocity_control_noise*self.dt
+        w_noise=self.angular_velocity_noise+self.angular_velocity_control_noise*self.dt
+        self.controls_samples=np.hstack((v_noise.reshape(self.noise_samples,1),w_noise.reshape(self.noise_samples,1)))
 
     def in_sensor_range(self, obstacle):
         if (self.get_position() - obstacle.get_position()).__pow__(2).sum() < self.sensor_range**2:

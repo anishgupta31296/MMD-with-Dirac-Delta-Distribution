@@ -14,7 +14,7 @@ def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
     sensor_range=8
     alpha=1
-    beta=0.01
+    beta=0.0005
     gamma=0.1
     save=0
     dist=0
@@ -60,8 +60,8 @@ def main():
     '''
     obs_noise_params = {
         'position': {
-            'weights': np.array([0.5, 0.5]),
-            'means': np.array([[0.4, -0.1],[-0.4,0.05]]),
+            'weights': np.array([0.2, 0.8]),
+            'means': np.array([[0.4, -0.1],[-0.4,0.1]]),
             'stds': np.array([[0.15, 0.15],[0.2,0.2]])
         },
         'velocity': {
@@ -77,9 +77,8 @@ def main():
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    planner=Planner(gamma=gamma,reduced_samples=20,device='cuda:0')
+    planner=Planner(param=0,samples_param=100)
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
-
         obstacles_in_range = []
         plt.clf()
         ax = plt.gcf().gca()
@@ -112,6 +111,7 @@ def main():
             ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.08))
         
         for j in range(len(obstacles)):
+            print(np.mean(obstacles[j].position_samples[itr[i],:], axis=0)-obs.get_position())
             for i in range(samples_to_plot):
                 ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
         plt.draw()

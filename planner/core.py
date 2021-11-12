@@ -3,17 +3,25 @@
 import numpy as np
 import seaborn as sns
 from random import sample
-from planner.optimizer import MMD
-
-
 
 class Planner:
 
-    def __init__(self,gamma=0.1,reduced_samples=20, device='cpu'):
+    def __init__(self,param=0.1,samples_param=20,optimizer='Gaussian Approximation',device='cpu'):
         self.noise_samples = None
         self.optimal_control = None
-        self.reduced_samples=reduced_samples
-        self.optimizer = MMD(gamma,reduced_samples, device)
+        self.reduced_samples=0
+        if(optimizer=='MMD Dirac Delta'):
+            from planner.optimizer import MMD_Dirac_Delta
+            self.optimizer = MMD_Dirac_Delta(param,samples_param, device)
+            self.reduced_samples=samples_param
+        elif(optimizer=='MMD'):
+            from planner.optimizer import MMD
+            self.optimizer = MMD(param,samples_param, device)
+            self.reduced_samples=samples_param
+        else:
+            from planner.optimizer import GaussianApproximation
+            self.optimizer = GaussianApproximation(param,samples_param, device)
+
         i,j=np.meshgrid(range(self.reduced_samples),range(self.reduced_samples))
         self.i=i.flatten()
         self.j=j.flatten()
@@ -21,29 +29,33 @@ class Planner:
 
         
     def get_coll_avoidance_cost(self,Agent,Obstacles):
-        self.noise_samples=Agent.noise_samples
-        v_noise=Agent.linear_velocity_noise+Agent.linear_velocity_control_noise
-        w_noise=Agent.angular_velocity_noise+Agent.angular_velocity_control_noise
-        control_samples,control_coeff=self.reduced_sets_method(np.hstack((v_noise.reshape(self.noise_samples,1), w_noise.reshape(self.noise_samples,1), Agent.position_samples, Agent.head_samples.reshape(self.noise_samples,1))),self.reduced_samples)
-        agent_p_samples=control_samples[:,2:4,:]
-        head_samples=control_samples[:,4,:]
-        control_samples=control_samples[:,0:2,:]
-        Agent.reduced_position_noise=agent_p_samples
-        Agent.reduced_controls_samples=control_samples
-        Agent.reduced_head_samples=head_samples
-        Agent.control_coeff=control_coeff[self.i]
-        MMD_cost=[]
-        for x in range(len(Obstacles)):
-            MMD_cost.append(np.zeros(control_samples.shape[0]))
-            obs_para, obs_coeff=self.reduced_sets_method(np.hstack((Obstacles[x].position_samples, Obstacles[x].velocity_samples)) ,self.reduced_samples) 
-            obs_velocity=obs_para[:,2:4,:]
-            obs_position=obs_para[:,0:2,:]
-            Obstacles[x].reduced_position_noise=obs_position
-            Obstacles[x].reduced_velocity_noise=obs_velocity
-            Obstacles[x].reduced_coeffs=obs_coeff[self.j]
-            R=Agent.radius+Obstacles[x].radius
-            MMD_cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
-        return MMD_cost    
+        cost=[]
+        if(self.reduced_samples>0):
+            self.noise_samples=Agent.noise_samples
+            control_samples,control_coeff=self.reduced_sets_method(np.hstack((Agent.controls_samples, Agent.position_samples, Agent.head_samples.reshape(self.noise_samples,1))),self.reduced_samples)
+            agent_p_samples=control_samples[:,2:4,:]
+            head_samples=control_samples[:,4,:]
+            control_samples=control_samples[:,0:2,:]
+            Agent.reduced_position_noise=agent_p_samples
+            Agent.reduced_controls_samples=control_samples
+            Agent.reduced_head_samples=head_samples
+            Agent.control_coeff=control_coeff[self.i]
+            for x in range(len(Obstacles)):
+                cost.append(np.zeros(control_samples.shape[0]))
+                obs_para, obs_coeff=self.reduced_sets_method(np.hstack((Obstacles[x].position_samples, Obstacles[x].velocity_samples)) ,self.reduced_samples) 
+                obs_velocity=obs_para[:,2:4,:]
+                obs_position=obs_para[:,0:2,:]
+                Obstacles[x].reduced_position_noise=obs_position
+                Obstacles[x].reduced_velocity_noise=obs_velocity
+                Obstacles[x].reduced_coeffs=obs_coeff[self.j]
+                R=Agent.radius+Obstacles[x].radius
+                cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
+        else:
+            for x in range(len(Obstacles)):
+                cost.append(np.zeros(Agent.controls_samples.shape[0]))
+                cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
+            
+        return cost    
 
     def get_controls(self,Agent,Obstacles, alpha, beta):
         Agent.sample_controls()
@@ -53,9 +65,8 @@ class Planner:
         if(len(Obstacles)>0):
             coll_avoidance_cost_list=self.get_coll_avoidance_cost(Agent,Obstacles)
             self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
-            self.coll_avoidance_cost=(self.coll_avoidance_cost-np.amin(self.coll_avoidance_cost))/(np.amax(self.coll_avoidance_cost)-np.amin(self.coll_avoidance_cost))
+            #self.coll_avoidance_cost=(self.coll_avoidance_cost-np.amin(self.coll_avoidance_cost))/(np.amax(self.coll_avoidance_cost)-np.amin(self.coll_avoidance_cost))
         cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
-        print(np.amin(self.coll_avoidance_cost), np.amax(self.goal_reaching_cost))
         indcs=np.argmin(cost)
         #print(indcs)
         #if(isinstance(indcs,list)):
