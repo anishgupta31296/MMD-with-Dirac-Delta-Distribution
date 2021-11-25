@@ -23,6 +23,8 @@ class MMD_Dirac_Delta:
         
     def get_cost(self,Agent,Obstacles):
         cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.reduced_head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.reduced_position_noise, Obstacles.reduced_position_noise, Obstacles.reduced_velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.reduced_controls_samples)
+        print(cones, cones.shape)
+        self.avoided_samples= np.sum(cones<0,axis=1)
         cones[cones<0]=0
         cones=cones[..., np.newaxis]
         coeffs=Agent.control_coeff*Obstacles.reduced_coeffs
@@ -34,7 +36,7 @@ class MMD_Dirac_Delta:
         return c    
         
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
-        dt=5*dt
+        dt=20*dt
         r1=ap.reshape(1,self.reduced_samples,1,2)
         vo1=ov.reshape(1,1,self.reduced_samples,2)
         ro1=op.reshape(1,1,self.reduced_samples,2)
@@ -88,7 +90,7 @@ class MMD:
         return c    
         
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
-        dt=5*dt
+        dt=1*dt
         r1=ap.reshape(1,self.reduced_samples,1,2)
         vo1=ov.reshape(1,1,self.reduced_samples,2)
         ro1=op.reshape(1,1,self.reduced_samples,2)
@@ -128,7 +130,7 @@ class GaussianApproximation:
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
         i=random.sample(range(ap.shape[0]),self.samples)
         j=random.sample(range(ap.shape[0]),self.samples)
-        dt=20*dt
+        dt=1*dt
         r1=ap[i].reshape(1,self.samples,1,2)
         vo1=ov[j].reshape(1,1,self.samples,2)
         ro1=op[j].reshape(1,1,self.samples,2)

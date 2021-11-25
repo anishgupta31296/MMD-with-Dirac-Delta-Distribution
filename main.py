@@ -9,6 +9,7 @@ from planner.core import *
 import timeit
 import random
 import os
+import csv
 
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
@@ -26,7 +27,7 @@ def main():
         'position': {
             'weights': np.array([0.5, 0.5]),
             'means': np.array([[-0.0, 0.0],[0.0,-0.0]]),
-            'stds': np.array([[0.1, 0.1],[0.1,0.1]])
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         },
         'velocity': {
             'weights': np.array([0.3, 0.7]),
@@ -36,7 +37,7 @@ def main():
         'controls': {
             'weights': np.array([0.4, 0.6]),
             'means': np.array([[-0.0, 0.0],[0.0,-0.0]]),
-            'stds': np.array([[0.01, 0.01],[0.04,0.01]])
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         },
         'head': {
             'weights': np.array([0.5, 0.5]),
@@ -77,7 +78,7 @@ def main():
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    planner=Planner(param=0,samples_param=100)
+    planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
@@ -100,6 +101,15 @@ def main():
         #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
         bot.set_controls(planner.optimal_control)
         times.append(timeit.default_timer() - start)
+        if(len(obstacles_in_range)):
+            print(planner.optimal_control)
+            header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost', 'MMD cost', 'Avoided Samples']
+            with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(header)
+                table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost,planner.coll_avoidance_cost,planner.optimizer.avoided_samples)).T,4)
+                writer.writerows(table)
+            break    
         #print(np.array(times).mean())
         #bot.set_linear_acceleration(control)
         #.append(bot.get_linear_velocity())
@@ -111,7 +121,6 @@ def main():
             ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.08))
         
         for j in range(len(obstacles)):
-            print(np.mean(obstacles[j].position_samples[itr[i],:], axis=0)-obs.get_position())
             for i in range(samples_to_plot):
                 ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
         plt.draw()

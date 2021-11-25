@@ -39,8 +39,8 @@ agent_noise_params = {
 obs_noise_params = {
     'position': {
         'weights': np.array([0.5, 0.5]),
-        'means': np.array([[-0.4, 0.1],[-0.2,0.05]]),
-        'stds': np.array([[0.15, 0.03],[0.2,0.03]])
+        'means': np.array([[-0.4, 0.1],[-0.0,0.0]]),
+        'stds': np.array([[0.15, 0.03],[0.01,0.01]])
     },
     'velocity': {
         'weights': np.array([0.3, 0.7]),
@@ -68,9 +68,16 @@ for i, obs in enumerate(obstacles):
 itr=random.sample(range(10000),samples)
 for i in range(samples):
     ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.08))
+planner.get_controls(bot,obstacles, alpha, beta)
 
 for j in range(len(obstacles)):
     for i in range(samples):
         ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
+header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost', 'MMD cost']
+with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(header)
+    table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost),planner.coll_avoidance_cost).T,4)
+    writer.writerows(table)
 
 plt.show()

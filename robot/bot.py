@@ -169,7 +169,7 @@ class NonHolonomicBot(Agent):
         xv, yv = np.meshgrid(range(samples), range(samples))
         yv=yv.flatten()
         v_list=v_list[yv]
-        v_list=np.append(v_list,vel_cap_min)
+        v_list=np.append(v_list,0)
         w_list=np.append(w_list,0)
         self.lin_ctrl=v_list
         self.ang_ctrl=w_list
@@ -192,7 +192,6 @@ class HolonomicBot(Agent):
                 return True
         return False
 
-        
     def get_x_velocity_bounds(self):
         return self.x_velocity_bounds
 
