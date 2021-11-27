@@ -22,8 +22,15 @@ class MMD_Dirac_Delta:
         #print(torch.cuda.memory_allocated())
         
     def get_cost(self,Agent,Obstacles):
-        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.reduced_head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.reduced_position_noise, Obstacles.reduced_position_noise, Obstacles.reduced_velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.reduced_controls_samples)
-        print(cones, cones.shape)
+        current_collision_cones=Agent.collision_cones(Obstacles,100)
+        colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
+        print(colliding)
+        if(colliding>85):
+            dt=Agent.dt*25*colliding/100
+        else:
+            dt=Agent.dt*5
+        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.reduced_head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.reduced_position_noise, Obstacles.reduced_position_noise, Obstacles.reduced_velocity_noise,Agent.radius+Obstacles.radius,dt,Agent.reduced_controls_samples)
+        #print(cones, cones.shape)
         self.avoided_samples= np.sum(cones<0,axis=1)
         cones[cones<0]=0
         cones=cones[..., np.newaxis]
@@ -36,7 +43,6 @@ class MMD_Dirac_Delta:
         return c    
         
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
-        dt=20*dt
         r1=ap.reshape(1,self.reduced_samples,1,2)
         vo1=ov.reshape(1,1,self.reduced_samples,2)
         ro1=op.reshape(1,1,self.reduced_samples,2)
@@ -114,34 +120,4 @@ class MMD:
         mmd = mmd_term1 - 2*mmd_term2 + self.mmd_term3 
         return mmd.cpu().numpy()
 
-class GaussianApproximation:
-    def __init__(self, k, samples_param,device):
-        self.k=k
-        self.samples=samples_param
-        self.device = device
-        
-    def get_cost(self,Agent,Obstacles):
-        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
-        mu=np.mean(cones, axis=1)
-        sigma=np.std(cones, axis=1)
-        c=mu+self.k*sigma
-        return c    
-        
-    def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
-        i=random.sample(range(ap.shape[0]),self.samples)
-        j=random.sample(range(ap.shape[0]),self.samples)
-        dt=1*dt
-        r1=ap[i].reshape(1,self.samples,1,2)
-        vo1=ov[j].reshape(1,1,self.samples,2)
-        ro1=op[j].reshape(1,1,self.samples,2)
-        h1=h[i].reshape(1,self.samples,1,1)
-        v_c=control_samples[i,0].reshape(1,self.samples,1,1)
-        w_c=control_samples[i,1].reshape(1,self.samples,1,1)
-        l_ctrl1=lin_ctrl.reshape(lin_ctrl.shape[0],1,1,1)
-        a_ctrl1=ang_ctrl.reshape(ang_ctrl.shape[0],1,1,1)
-        nh_v=(l_ctrl1+v+v_c)*np.concatenate((np.cos(h1+(a_ctrl1+w+w_c)*dt), np.sin(h1+(a_ctrl1+w+w_c)*dt)),axis=3)
-        vr=nh_v-vo1
-        rr=r1-ro1
-        cones=np.square(np.sum(vr*rr, axis=3))+ np.sum(np.square(vr), axis=3)*((R)**2 - np.sum(np.square(rr), axis=3))
-        cones=cones.reshape(lin_ctrl.shape[0],self.samples*self.samples)
-        return cones
+

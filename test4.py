@@ -38,9 +38,9 @@ agent_noise_params = {
 }
 obs_noise_params = {
     'position': {
-        'weights': np.array([0.5, 0.5]),
-        'means': np.array([[-0.4, 0.1],[-0.0,0.0]]),
-        'stds': np.array([[0.15, 0.03],[0.01,0.01]])
+        'weights': np.array([0.2, 0.8]),
+        'means': np.array([[0.4, -0.1],[-0.4,0.1]]),
+        'stds': np.array([[0.15, 0.15],[0.2,0.2]])
     },
     'velocity': {
         'weights': np.array([0.3, 0.7]),
@@ -48,7 +48,6 @@ obs_noise_params = {
         'stds': np.array([[0.0, 0.0],[0.0,0.0]])
     }
 }
-
 bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
 samples = 100
 plt.clf()
@@ -65,19 +64,14 @@ obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_
 for i, obs in enumerate(obstacles):
     ax.add_artist(plt.Circle(obs.get_position(), obs.radius, facecolor='#ffa804', edgecolor='black', zorder=100))
 
+print(np.mean(obstacles[0].position_noise),np.std(obstacles[0].position_noise))
 itr=random.sample(range(10000),samples)
 for i in range(samples):
     ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.08))
-planner.get_controls(bot,obstacles, alpha, beta)
 
 for j in range(len(obstacles)):
     for i in range(samples):
         ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
-header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost', 'MMD cost']
-with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(header)
-    table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost),planner.coll_avoidance_cost).T,4)
-    writer.writerows(table)
+
 
 plt.show()

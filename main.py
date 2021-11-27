@@ -15,9 +15,9 @@ def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
     sensor_range=8
     alpha=1
-    beta=0.0005
+    beta=0.1
     gamma=0.1
-    save=0
+    save=1
     dist=0
     samples_to_plot = 50
 
@@ -45,12 +45,12 @@ def main():
             'stds': np.array([0.0, 0.0])
         }        
     }
-    '''
+    
     obs_noise_params = {
         'position': {
             'weights': np.array([0.5, 0.5]),
-            'means': np.array([[-0.4, 0.1],[-0.2,0.05]]),
-            'stds': np.array([[0.15, 0.03],[0.2,0.03]])
+            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'stds': np.array([[0.3, 0.3],[0.3,0.3]])
         },
         'velocity': {
             'weights': np.array([0.3, 0.7]),
@@ -58,6 +58,7 @@ def main():
             'stds': np.array([[0.0, 0.0],[0.0,0.0]])
         }
     }
+
     '''
     obs_noise_params = {
         'position': {
@@ -70,12 +71,26 @@ def main():
             'means': np.array([[-0.0, 0.0],[-0.0,0.0]]),
             'stds': np.array([[0.0, 0.0],[0.0,0.0]])
         }
-    }    
+    }
+    
+    obs_noise_params2 = {
+        'position': {
+            'weights': np.array([0.2, 0.8]),
+            'means': np.array([[-0.4, 0.1],[0.4,-0.1]]),
+            'stds': np.array([[0.15, 0.15],[0.2,0.2]])
+        },
+        'velocity': {
+            'weights': np.array([0.3, 0.7]),
+            'means': np.array([[-0.0, 0.0],[-0.0,0.0]]),
+            'stds': np.array([[0.0, 0.0],[0.0,0.0]])
+        }
+    }
+    '''   
     bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
     obstacles = []
-    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([11.5,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([7,11.5]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params2))
     counter = 0
 
     planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
@@ -101,6 +116,7 @@ def main():
         #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
         bot.set_controls(planner.optimal_control)
         times.append(timeit.default_timer() - start)
+        '''
         if(len(obstacles_in_range)):
             print(planner.optimal_control)
             header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost', 'MMD cost', 'Avoided Samples']
@@ -110,6 +126,7 @@ def main():
                 table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost,planner.coll_avoidance_cost,planner.optimizer.avoided_samples)).T,4)
                 writer.writerows(table)
             break    
+        '''
         #print(np.array(times).mean())
         #bot.set_linear_acceleration(control)
         #.append(bot.get_linear_velocity())
