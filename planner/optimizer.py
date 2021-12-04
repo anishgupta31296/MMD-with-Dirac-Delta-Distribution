@@ -29,6 +29,7 @@ class MMD_Dirac_Delta:
             dt=Agent.dt*25*colliding/100
         else:
             dt=Agent.dt*5
+        dt=Agent.dt*5
         cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.reduced_head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.reduced_position_noise, Obstacles.reduced_position_noise, Obstacles.reduced_velocity_noise,Agent.radius+Obstacles.radius,dt,Agent.reduced_controls_samples)
         #print(cones, cones.shape)
         self.avoided_samples= np.sum(cones<0,axis=1)

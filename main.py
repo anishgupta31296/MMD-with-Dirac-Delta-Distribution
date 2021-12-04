@@ -19,7 +19,7 @@ def main():
     gamma=0.1
     save=1
     dist=0
-    samples_to_plot = 50
+    samples_to_plot = 100
 
     times=[]
 
@@ -45,12 +45,12 @@ def main():
             'stds': np.array([0.0, 0.0])
         }        
     }
-    
+    '''   
     obs_noise_params = {
         'position': {
             'weights': np.array([0.5, 0.5]),
             'means': np.array([[0.0, 0.0],[0.0,0.0]]),
-            'stds': np.array([[0.3, 0.3],[0.3,0.3]])
+            'stds': np.array([[0.32, 0.32],[0.32,0.32]])
         },
         'velocity': {
             'weights': np.array([0.3, 0.7]),
@@ -85,12 +85,25 @@ def main():
             'stds': np.array([[0.0, 0.0],[0.0,0.0]])
         }
     }
-    '''   
-    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
+    obs_noise_params = {
+        'position': {
+            'weights': np.array([0.2, 0.8]),
+            'means': np.array([[0.4, -0.1],[-0.01,0.025]]),
+            'stds': np.array([[0.15, 0.15],[0.002,0.002]])
+        },
+        'velocity': {
+            'weights': np.array([0.3, 0.7]),
+            'means': np.array([[-0.0, 0.0],[-0.0,0.0]]),
+            'stds': np.array([[0.0, 0.0],[0.0,0.0]])
+        }
+    }
+    
+
+    bot=NonHolonomicBot(np.array([0,0]), np.array([0, 20]), agent_noise_params, sensor_range=sensor_range)
     obstacles = []
-    obstacles.append(Obstacle(position=np.array([11.5,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([7,11.5]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    #obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params2))
+    #obstacles.append(Obstacle(position=np.array([11.5,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([-2.5,15]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([2.5,15]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
     planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
@@ -98,7 +111,7 @@ def main():
         obstacles_in_range = []
         plt.clf()
         ax = plt.gcf().gca()
-        ax.set_xlim((-5, 20))
+        ax.set_xlim((-12.5, 12.5))
         # ax.set_xlim((0, 12))
         ax.set_ylim((-5,20))
         # ax.set_ylim((0, 12))
