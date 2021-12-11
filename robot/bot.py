@@ -9,7 +9,7 @@ class NonHolonomicBot(Agent):
     def __init__(self, position, goal, noise_params, sensor_range=7, dt=1/10, noise_samples=10000, radius=1,   name='Bot'):
         self.min_linear_velocity = 0.4
         self.max_linear_velocity = 1.5
-        self.max_angular_velocity = 0.8
+        self.max_angular_velocity = 1.0
         self.sensor_range = sensor_range
         self.head=math.atan2(goal[1]-position[1],goal[0]-position[0])
         self.linear_velocity = self.min_linear_velocity
