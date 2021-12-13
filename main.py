@@ -45,12 +45,12 @@ def main():
             'stds': np.array([0.0, 0.0])
         }        
     }
-    '''   
+
     obs_noise_params = {
         'position': {
             'weights': np.array([0.5, 0.5]),
             'means': np.array([[0.0, 0.0],[0.0,0.0]]),
-            'stds': np.array([[0.32, 0.32],[0.32,0.32]])
+            'stds': np.array([[0.3, 0.3],[0.3,0.3]])
         },
         'velocity': {
             'weights': np.array([0.5, 0.5]),
@@ -59,7 +59,7 @@ def main():
         }
     }
 
-    '''
+
     obs_noise_params1 = {
         'position': {
             'weights': np.array([0.2, 0.8]),
@@ -102,9 +102,9 @@ def main():
 
     bot=NonHolonomicBot(np.array([0,0]), np.array([20, 0]), agent_noise_params, sensor_range=sensor_range)
     obstacles = []
-    obstacles.append(Obstacle(position=np.array([13,-10]), goal=np.array([13,10]), noise_params=obs_noise_params2))
-    obstacles.append(Obstacle(position=np.array([13,10]), goal=np.array([13,-10]), noise_params=obs_noise_params1))
-    obstacles.append(Obstacle(position=np.array([19,0]), goal=np.array([0,0]), noise_params=obs_noise_params3))
+    obstacles.append(Obstacle(position=np.array([13,-10]), goal=np.array([13,10]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([13,10]), goal=np.array([13,-10]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([19,0]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
     planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')

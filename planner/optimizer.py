@@ -121,4 +121,84 @@ class MMD:
         mmd = mmd_term1 - 2*mmd_term2 + self.mmd_term3 
         return mmd.cpu().numpy()
 
+class PVO:
+    def __init__(self, k, samples_param,device):
+        self.k=k
+        self.samples=samples_param
+        self.device = device
 
+    def get_cost(self,Agent,Obstacles):
+        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
+        mu=np.mean(cones, axis=1)
+        sigma=np.std(cones, axis=1)
+        c=mu+self.k*sigma
+        return c    
+
+    def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
+        i=random.sample(range(ap.shape[0]),self.samples)
+        j=random.sample(range(ap.shape[0]),self.samples)
+        dt=20*dt
+        r1=ap[i].reshape(1,self.samples,1,2)
+        vo1=ov[j].reshape(1,1,self.samples,2)
+        ro1=op[j].reshape(1,1,self.samples,2)
+        h1=h[i].reshape(1,self.samples,1,1)
+        v_c=control_samples[i,0].reshape(1,self.samples,1,1)
+        w_c=control_samples[i,1].reshape(1,self.samples,1,1)
+        l_ctrl1=lin_ctrl.reshape(lin_ctrl.shape[0],1,1,1)
+        a_ctrl1=ang_ctrl.reshape(ang_ctrl.shape[0],1,1,1)
+        nh_v=(l_ctrl1+v+v_c)*np.concatenate((np.cos(h1+(a_ctrl1+w+w_c)*dt), np.sin(h1+(a_ctrl1+w+w_c)*dt)),axis=3)
+        vr=nh_v-vo1
+        rr=r1-ro1
+        cones=np.square(np.sum(vr*rr, axis=3))+ np.sum(np.square(vr), axis=3)*((R)**2 - np.sum(np.square(rr), axis=3))
+        cones=cones.reshape(lin_ctrl.shape[0],self.samples*self.samples)
+        return cones
+
+class KLD:
+
+    def __init__(self, k, samples_param,device):
+        self.k=k
+        self.samples=samples_param
+        self.device = device
+
+
+    def gaussian_log_prob(mean, std, x):
+        return (-0.5 * np.log(2*np.pi*std*std)) + (-(x-mean)*(x-mean)/(2*std*std))
+
+
+    def gaussian_prob(mean, std, x):
+        return (1/np.sqrt(2*np.pi*std*std)) * np.exp(-(x-mean)*(x-mean)/(2*std*std))
+
+
+    def get_cost(self,Agent,Obstacles):
+        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
+        cones = np.sort(cones,axis=1)
+        gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
+        gmm.fit(cones.reshape(-1, 1))
+        desired_mean = -2.5
+        desired_std = 1.41414
+
+        kld = 0
+        gmm_cone_probs = gmm.score_samples(cones.reshape(-1, 1))
+        for i, cone in enumerate(cones):
+            kld += (gmm_cone_probs[i] - np.log(gaussian_prob(desired_mean, desired_std, cone))) * np.exp(gmm_cone_probs[i])
+        return kld
+
+
+    def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
+        i=random.sample(range(ap.shape[0]),self.samples)
+        j=random.sample(range(ap.shape[0]),self.samples)
+        dt=20*dt
+        r1=ap[i].reshape(1,self.samples,1,2)
+        vo1=ov[j].reshape(1,1,self.samples,2)
+        ro1=op[j].reshape(1,1,self.samples,2)
+        h1=h[i].reshape(1,self.samples,1,1)
+        v_c=control_samples[i,0].reshape(1,self.samples,1,1)
+        w_c=control_samples[i,1].reshape(1,self.samples,1,1)
+        l_ctrl1=lin_ctrl.reshape(lin_ctrl.shape[0],1,1,1)
+        a_ctrl1=ang_ctrl.reshape(ang_ctrl.shape[0],1,1,1)
+        nh_v=(l_ctrl1+v+v_c)*np.concatenate((np.cos(h1+(a_ctrl1+w+w_c)*dt), np.sin(h1+(a_ctrl1+w+w_c)*dt)),axis=3)
+        vr=nh_v-vo1
+        rr=r1-ro1
+        cones=np.square(np.sum(vr*rr, axis=3))+ np.sum(np.square(vr), axis=3)*((R)**2 - np.sum(np.square(rr), axis=3))
+        cones=cones.reshape(lin_ctrl.shape[0],self.samples*self.samples)
+        return cones
