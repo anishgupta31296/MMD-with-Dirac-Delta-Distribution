@@ -19,7 +19,7 @@ def main():
     gamma=0.1
     save=1
     dist=0
-    samples_to_plot = 500
+    samples_to_plot = 50
 
     times=[]
 
@@ -107,7 +107,8 @@ def main():
     obstacles.append(Obstacle(position=np.array([19,0]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
+    #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
+    planner=Planner(param=0.1,samples_param=25,optimizer='KLD',device='cpu')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()

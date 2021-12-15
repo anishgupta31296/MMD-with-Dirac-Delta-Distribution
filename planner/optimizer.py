@@ -2,7 +2,8 @@
 import numpy as np
 import torch
 import random
-
+from sklearn import mixture
+from sys import getsizeof
 class MMD_Dirac_Delta:
     def __init__(self, gamma, reduced_samples, device):
         self.reduced_samples=reduced_samples
@@ -154,33 +155,43 @@ class PVO:
         return cones
 
 class KLD:
-
     def __init__(self, k, samples_param,device):
         self.k=k
         self.samples=samples_param
         self.device = device
 
-
+    @staticmethod
     def gaussian_log_prob(mean, std, x):
         return (-0.5 * np.log(2*np.pi*std*std)) + (-(x-mean)*(x-mean)/(2*std*std))
 
-
+    @staticmethod
     def gaussian_prob(mean, std, x):
         return (1/np.sqrt(2*np.pi*std*std)) * np.exp(-(x-mean)*(x-mean)/(2*std*std))
 
+    def get_kld_cost(self, cones):
+        gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
+        desired_mean = -2.5
+        desired_std = 1.41414
+        gmm.fit(cones)
+        gmm_cone_probs = gmm.score_samples(cones).reshape(-1, 1)
+        kld = np.sum((gmm_cone_probs - np.log(self.gaussian_prob(desired_mean, desired_std, cones))) * np.exp(gmm_cone_probs))
+        return kld
 
     def get_cost(self,Agent,Obstacles):
         cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
         cones = np.sort(cones,axis=1)
-        gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
-        gmm.fit(cones.reshape(-1, 1))
-        desired_mean = -2.5
-        desired_std = 1.41414
-
-        kld = 0
-        gmm_cone_probs = gmm.score_samples(cones.reshape(-1, 1))
-        for i, cone in enumerate(cones):
-            kld += (gmm_cone_probs[i] - np.log(gaussian_prob(desired_mean, desired_std, cone))) * np.exp(gmm_cone_probs[i])
+        #gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
+        #desired_mean = -2.5
+        #desired_std = 1.41414
+        kld=[]
+        for i in range(cones.shape[0]):
+            print(i)
+            cones1=cones[i,:].reshape(-1, 1)
+            kld_cost=self.get_kld_cost(cones1)
+            kld.append(kld_cost)
+            #gmm.fit(cones.reshape(-1, 1))
+            #gmm_cone_probs = gmm.score_samples(cones1)
+            #kld.append( (gmm_cone_probs - np.log(self.gaussian_prob(desired_mean, desired_std, cones1))) * np.exp(gmm_cone_probs) )
         return kld
 
 

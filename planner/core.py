@@ -18,9 +18,13 @@ class Planner:
             from planner.optimizer import MMD
             self.optimizer = MMD(param,samples_param, device)
             self.reduced_samples=samples_param
+        elif(optimizer=='KLD'):
+            from planner.optimizer import KLD
+            self.optimizer = KLD(param,samples_param, device)
+
         else:
-            from planner.optimizer import GaussianApproximation
-            self.optimizer = GaussianApproximation(param,samples_param, device)
+            from planner.optimizer import PVO
+            self.optimizer = PVO(param,samples_param, device)
 
         i,j=np.meshgrid(range(self.reduced_samples),range(self.reduced_samples))
         self.i=i.flatten()
