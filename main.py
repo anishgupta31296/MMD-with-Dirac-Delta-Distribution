@@ -1,5 +1,3 @@
-
-
 import numpy as np
 from seaborn import kdeplot
 import matplotlib.pyplot as plt
@@ -14,12 +12,12 @@ import csv
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
     sensor_range=10
-    alpha=1
+    alpha=10
     beta=0.001
     gamma=0.1
     save=1
-    dist=0
-    samples_to_plot = 50
+    dist=1
+    samples_to_plot = 100
 
     times=[]
 
@@ -49,74 +47,33 @@ def main():
     obs_noise_params = {
         'position': {
             'weights': np.array([0.5, 0.5]),
-            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
-            'stds': np.array([[0.3, 0.3],[0.3,0.3]])
+            'means': np.array([[0.4, -0.1],[-0.4,0.1]]),
+            'stds': np.array([[0.15, 0.15],[0.2,0.2]])
         },
         'velocity': {
-            'weights': np.array([0.5, 0.5]),
-            'means': np.array([[-0.01, 0.01],[-0.01,0.01]]),
-            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
+            'weights': np.array([0.3, 0.7]),
+            'means': np.array([[-0.07, 0.03],[-0.05,0.0214]]),
+            'stds': np.array([[0.01, 0.06],[0.02,0.04]])
         }
     }
 
 
-    obs_noise_params1 = {
-        'position': {
-            'weights': np.array([0.2, 0.8]),
-            'means': np.array([[0.004, -0.001],[-0.4,0.1]]),
-            'stds': np.array([[0.1, 0.1],[0.2,0.15]])
-        },
-        'velocity': {
-            'weights': np.array([0.5, 0.5]),
-            'means': np.array([[-0.01, 0.01],[-0.01,0.01]]),
-            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
-        }
-    }
-    
-    obs_noise_params2 = {
-        'position': {
-            'weights': np.array([0.2, 0.8]),
-            'means': np.array([[-0.4, 0.1],[-0.4,0.1]]),
-            'stds': np.array([[0.15, 0.07],[0.15,0.07]])
-        },
-        'velocity': {
-            'weights': np.array([0.5, 0.5]),
-            'means': np.array([[-0.01, 0.01],[-0.01,0.01]]),
-            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
-        }
-    }
-
-    obs_noise_params3 = {
-        'position': {
-            'weights': np.array([0.2, 0.8]),
-            'means': np.array([[-0.4, 0.1],[-0.1,0.025]]),
-            'stds': np.array([[0.15, 0.15],[0.1,0.1]])
-        },
-        'velocity': {
-            'weights': np.array([0.5, 0.5]),
-            'means': np.array([[-0.01, 0.01],[-0.01,0.01]]),
-            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
-        }
-    }
-    
-
-    bot=NonHolonomicBot(np.array([0,0]), np.array([20, 0]), agent_noise_params, sensor_range=sensor_range)
+    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
     obstacles = []
-    obstacles.append(Obstacle(position=np.array([13,-10]), goal=np.array([13,10]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([13,10]), goal=np.array([13,-10]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([19,0]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
     #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=0.1,samples_param=25,optimizer='KLD',device='cpu')
+    planner=Planner(param=1.0,samples_param=50,optimizer='PVO',device='cpu')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
         ax = plt.gcf().gca()
-        ax.set_xlim((-5, 25))
+        ax.set_xlim((-5, 20))
         # ax.set_xlim((0, 12))
-        ax.set_ylim((-15,15))
-
+        ax.set_ylim((-5,20))
         # ax.set_ylim((0, 12))
         ax.add_artist(plt.Circle(bot.get_position(), bot.sensor_range, color='gray', alpha=0.1))
         for i, obs in enumerate(obstacles):
@@ -130,8 +87,9 @@ def main():
         start = timeit.default_timer()
         planner.get_controls(bot,obstacles_in_range, alpha, beta)
         #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
-        print(planner.optimal_control)
+        print(bot.get_velocity())
         bot.set_controls(planner.optimal_control)
+        print(timeit.default_timer() - start)
         times.append(timeit.default_timer() - start)
         '''
         if(len(obstacles_in_range)):
@@ -166,11 +124,11 @@ def main():
                 fig = plt.figure()
                 plt.arrow(0, 0, 0, 0.15,width=0.2,length_includes_head=True, head_width=0.7, head_length=0.005,color='black')
                 cones=bot.collision_cones(obstacles[i],100)
-                cones[cones<0]=0
+                #cones[cones<0]=0
                 ax = kdeplot(cones, label='Final Cones', shade=True, color='#ffa804')
                 #ax.axvline(x=0)
-                ax.set_xlim((-5, 25))
-                ax.set_ylim((0, 0.15))
+                ax.set_xlim((-25, 25))
+                ax.set_ylim((0, 0.3))
                 # ax.axvline(x=0)
                 fig.savefig('../MMD Python Outputs/dist-{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
                 # plt.show()

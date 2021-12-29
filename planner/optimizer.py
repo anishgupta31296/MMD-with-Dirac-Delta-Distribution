@@ -4,6 +4,8 @@ import torch
 import random
 from sklearn import mixture
 from sys import getsizeof
+import timeit
+
 class MMD_Dirac_Delta:
     def __init__(self, gamma, reduced_samples, device):
         self.reduced_samples=reduced_samples
@@ -129,6 +131,13 @@ class PVO:
         self.device = device
 
     def get_cost(self,Agent,Obstacles):
+        dt=Agent.dt
+        current_collision_cones=Agent.collision_cones(Obstacles,100)
+        colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
+        if(colliding>90):
+            dt=Agent.dt*22*colliding/100
+        else:
+            dt=Agent.dt*2.5
         cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
         mu=np.mean(cones, axis=1)
         sigma=np.std(cones, axis=1)
@@ -138,7 +147,6 @@ class PVO:
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
         i=random.sample(range(ap.shape[0]),self.samples)
         j=random.sample(range(ap.shape[0]),self.samples)
-        dt=20*dt
         r1=ap[i].reshape(1,self.samples,1,2)
         vo1=ov[j].reshape(1,1,self.samples,2)
         ro1=op[j].reshape(1,1,self.samples,2)
@@ -172,20 +180,27 @@ class KLD:
         gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
         desired_mean = -2.5
         desired_std = 1.41414
+        start = timeit.default_timer()
         gmm.fit(cones)
+        print(timeit.default_timer() - start)
         gmm_cone_probs = gmm.score_samples(cones).reshape(-1, 1)
         kld = np.sum((gmm_cone_probs - np.log(self.gaussian_prob(desired_mean, desired_std, cones))) * np.exp(gmm_cone_probs))
         return kld
 
     def get_cost(self,Agent,Obstacles):
-        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
+        current_collision_cones=Agent.collision_cones(Obstacles,100)
+        colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
+        if(colliding>96):
+            dt=Agent.dt*22*colliding/100
+        else:
+            dt=Agent.dt
+        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,dt,Agent.controls_samples)
         cones = np.sort(cones,axis=1)
         #gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
         #desired_mean = -2.5
         #desired_std = 1.41414
         kld=[]
         for i in range(cones.shape[0]):
-            print(i)
             cones1=cones[i,:].reshape(-1, 1)
             kld_cost=self.get_kld_cost(cones1)
             kld.append(kld_cost)
@@ -198,7 +213,6 @@ class KLD:
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
         i=random.sample(range(ap.shape[0]),self.samples)
         j=random.sample(range(ap.shape[0]),self.samples)
-        dt=20*dt
         r1=ap[i].reshape(1,self.samples,1,2)
         vo1=ov[j].reshape(1,1,self.samples,2)
         ro1=op[j].reshape(1,1,self.samples,2)
