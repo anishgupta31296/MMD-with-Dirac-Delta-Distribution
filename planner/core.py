@@ -10,6 +10,7 @@ class Planner:
         self.noise_samples = None
         self.optimal_control = None
         self.reduced_samples=0
+        self.constraint=0
         if(optimizer=='MMD Dirac Delta'):
             from planner.optimizer import MMD_Dirac_Delta
             self.optimizer = MMD_Dirac_Delta(param,samples_param, device)
@@ -24,6 +25,7 @@ class Planner:
 
         else:
             from planner.optimizer import PVO
+            self.constraint=1
             self.optimizer = PVO(param,samples_param, device)
 
         i,j=np.meshgrid(range(self.reduced_samples),range(self.reduced_samples))
@@ -61,7 +63,7 @@ class Planner:
             
         return cost    
 
-    def get_controls(self,Agent,Obstacles, alpha, beta):
+    def get_controls(self,Agent,Obstacles, alpha, beta, delta):
         Agent.sample_controls()
         self.goal_reaching_cost=Agent.get_desired_velocity_cost()
         self.goal_reaching_cost=(self.goal_reaching_cost-np.amin(self.goal_reaching_cost))/(np.amax(self.goal_reaching_cost)-np.amin(self.goal_reaching_cost))
@@ -70,8 +72,29 @@ class Planner:
             coll_avoidance_cost_list=self.get_coll_avoidance_cost(Agent,Obstacles)
             self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
             #self.coll_avoidance_cost=(self.coll_avoidance_cost-np.amin(self.coll_avoidance_cost))/(np.amax(self.coll_avoidance_cost)-np.amin(self.coll_avoidance_cost))
-        cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
-        indcs=np.argmin(cost)
+            cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
+            indcs=np.argmin(cost)
+            if(self.constraint==0):
+                print(2)
+                cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
+                indcs=np.argmin(cost)
+            else:
+                print(3)
+                cons=self.coll_avoidance_cost
+                cost=beta*self.goal_reaching_cost+delta*np.linalg.norm(np.vstack((Agent.lin_ctrl[indcs],Agent.ang_ctrl[indcs])).T,axis=1)
+                if(np.any(cons<0)):
+                    min_cost=np.min(cost_list[cons<0])
+                    indcs=np.where(cost_list==min_cost)
+                    if(len(indcs)>1):
+                        indcs=indc[np.random.choice(len(indcs))]
+                    print(cons[indcs])
+                else:
+                    indcs=np.argmin(cons)
+                    print(4,self.optimizer.mu[indcs],self.optimizer.sigma[indcs],cons[indcs])
+        else:
+            print(1)
+            cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
+            indcs=np.argmin(cost)
         #print(indcs)
         #if(isinstance(indcs,list)):
         #    indcs=sample(indcs,1)

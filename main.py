@@ -12,9 +12,10 @@ import csv
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
     sensor_range=10
-    alpha=10
-    beta=0.001
+    alpha=1
+    beta=0.1
     gamma=0.1
+    delta=0.1
     save=1
     dist=1
     samples_to_plot = 100
@@ -51,9 +52,9 @@ def main():
             'stds': np.array([[0.15, 0.15],[0.2,0.2]])
         },
         'velocity': {
-            'weights': np.array([0.3, 0.7]),
-            'means': np.array([[-0.07, 0.03],[-0.05,0.0214]]),
-            'stds': np.array([[0.01, 0.06],[0.02,0.04]])
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
         }
     }
 
@@ -85,11 +86,11 @@ def main():
 
         counter=counter+1        
         start = timeit.default_timer()
-        planner.get_controls(bot,obstacles_in_range, alpha, beta)
+        planner.get_controls(bot,obstacles_in_range, alpha, beta, delta)
         #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
-        print(bot.get_velocity())
+        #print(bot.get_velocity())
         bot.set_controls(planner.optimal_control)
-        print(timeit.default_timer() - start)
+        #print(timeit.default_timer() - start)
         times.append(timeit.default_timer() - start)
         '''
         if(len(obstacles_in_range)):
