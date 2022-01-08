@@ -94,8 +94,8 @@ class Agent:
         return cone
 
     def collision_cones(self, obstacle, samples):
-        i=random.sample(range(self.noise_samples),samples)
-        j=random.sample(range(self.noise_samples),samples)
+        i=np.arange(samples)#random.sample(range(self.noise_samples),samples)
+        j=np.arange(samples)#random.sample(range(self.noise_samples),samples)
         v=self.velocity_samples[i].reshape(samples,1,2)
         r=self.position_samples[i].reshape(samples,1,2)
         vo=obstacle.velocity_samples[j].reshape(1,samples,2)
@@ -109,7 +109,7 @@ class Agent:
         rx=rr1[:,0]
         ry=rr1[:,1]
         cones=(vx*rx + vy*ry)**2 + (vx**2 + vy**2)*((self.radius + obstacle.radius)**2 - (rx**2 + ry**2))
-        return cones
+        return cones,vr,rr
 
     def is_colliding(self, obstacle):
         if self.collision_cone(obstacle) > 0:

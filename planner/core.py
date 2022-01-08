@@ -71,17 +71,14 @@ class Planner:
         if(len(Obstacles)>0):
             coll_avoidance_cost_list=self.get_coll_avoidance_cost(Agent,Obstacles)
             self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
-            #self.coll_avoidance_cost=(self.coll_avoidance_cost-np.amin(self.coll_avoidance_cost))/(np.amax(self.coll_avoidance_cost)-np.amin(self.coll_avoidance_cost))
-            cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
-            indcs=np.argmin(cost)
             if(self.constraint==0):
                 print(2)
                 cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
                 indcs=np.argmin(cost)
             else:
                 print(3)
-                cons=self.coll_avoidance_cost
-                cost=beta*self.goal_reaching_cost+delta*np.linalg.norm(np.vstack((Agent.lin_ctrl[indcs],Agent.ang_ctrl[indcs])).T,axis=1)
+                cons=self.coll_avoidance_cost 
+                cost=beta*self.goal_reaching_cost+delta*(Agent.ang_ctrl**2)
                 if(np.any(cons<0)):
                     min_cost=np.min(cost_list[cons<0])
                     indcs=np.where(cost_list==min_cost)
@@ -89,15 +86,13 @@ class Planner:
                         indcs=indc[np.random.choice(len(indcs))]
                     print(cons[indcs])
                 else:
+                    cost=beta*cons+delta*(Agent.ang_ctrl**2)
                     indcs=np.argmin(cons)
                     print(4,self.optimizer.mu[indcs],self.optimizer.sigma[indcs],cons[indcs])
         else:
             print(1)
             cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
             indcs=np.argmin(cost)
-        #print(indcs)
-        #if(isinstance(indcs,list)):
-        #    indcs=sample(indcs,1)
         self.optimal_control=[Agent.lin_ctrl[indcs],Agent.ang_ctrl[indcs]]
 
     def reduced_sets_method(self, dist,target_size):
@@ -139,4 +134,4 @@ class Planner:
     def kernelRBF(self, dist, dist1):
         g=0.1
         k=np.exp(-g*(np.sum((dist-dist1)**2, axis=1)))  
-        return k        
+        return k
