@@ -8,7 +8,6 @@ class Agent:
 
     def __init__(self, position, velocity, goal, noise_params, noise_samples, radius=1, dt=1/10, name='Bot'):
         self.name = name
-        print(name)
         self.radius = radius
         self.filter_radius=radius*3
         self.position = position
@@ -36,7 +35,6 @@ class Agent:
     def update_samples(self):
         self.position_samples=self.position+self.position_noise
         self.velocity_samples=self.velocity+self.velocity_noise
-        print(np.std(self.velocity_noise,axis=0))
 
     def get_noise_samples(self, params, samples=None):
         if samples is None:
@@ -96,22 +94,6 @@ class Agent:
         cone = ((r @ v) / v.__pow__(2).sum()) - r.__pow__(2).sum() + (self.radius + obstacle.radius).__pow__(2)
         return cone
 
-    def collision_cones1(self, obstacle, samples):
-        v=self.velocity_samples
-        r=self.position_samples
-        vo=obstacle.velocity_samples
-        ro=obstacle.position_samples
-        vr=v-vo
-        rr=r-ro
-        vr1=vr
-        rr1=rr
-        vx=vr1[:,0]
-        vy=vr1[:,1]
-        rx=rr1[:,0]
-        ry=rr1[:,1]
-        cones=(vx*rx + vy*ry)**2 + (vx**2 + vy**2)*((self.radius + obstacle.radius)**2 - (rx**2 + ry**2))
-        return cones,v,vo
-
     def collision_cones(self, obstacle, samples):
         i=random.sample(range(self.noise_samples),samples)
         j=random.sample(range(self.noise_samples),samples)
@@ -127,8 +109,6 @@ class Agent:
         vy=vr1[:,1]
         rx=rr1[:,0]
         ry=rr1[:,1]
-        print('a',np.mean((vx*rx + vy*ry)**2))
-        print('b',np.mean((vx**2 + vy**2)*((self.radius + obstacle.radius)**2 - (rx**2 + ry**2))))
         cones=(vx*rx + vy*ry)**2 + (vx**2 + vy**2)*((self.radius + obstacle.radius)**2 - (rx**2 + ry**2))
         return cones
 

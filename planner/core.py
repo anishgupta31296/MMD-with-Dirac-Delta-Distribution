@@ -72,26 +72,23 @@ class Planner:
             coll_avoidance_cost_list=self.get_coll_avoidance_cost(Agent,Obstacles)
             self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
             if(self.constraint==0):
-                print(2)
                 cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
                 indcs=np.argmin(cost)
             else:
-                print(3)
                 cons=self.coll_avoidance_cost 
                 cost=beta*self.goal_reaching_cost+delta*(Agent.ang_ctrl**2)
                 if(np.any(cons<0)):
                     min_cost=np.min(cost[cons<0])
-                    indcs=np.where(cost==min_cost)
+                    indcs=np.where(cost==min_cost)[0]
                     if(len(indcs)>1):
                         indcs=indc[np.random.choice(len(indcs))]
-                    print(cons[indcs])
+                    else:
+                        indcs=indcs[0]
                 else:
                     cost=beta*cons+delta*(Agent.ang_ctrl**2)
                     indcs=np.argmin(cons)
-                    print(4,self.optimizer.mu[indcs],self.optimizer.sigma[indcs],cons[indcs])
                 self.final_cones=self.optimizer.cones[indcs]
         else:
-            print(1)
             cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
             indcs=np.argmin(cost)
         self.optimal_control=[Agent.lin_ctrl[indcs],Agent.ang_ctrl[indcs]]
@@ -126,7 +123,6 @@ class Planner:
         r1=dist.shape[0]
         r2=dist1.shape[0]
         x,y=np.meshgrid(range(r1), range(r2))
-
         x=x.T.flatten()
         y=y.T.flatten()
         kernel_matrix=self.kernelRBF(dist[x,:], dist1[y,:]).reshape(r1, r2)

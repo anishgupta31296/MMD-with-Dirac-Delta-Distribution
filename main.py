@@ -99,7 +99,7 @@ def main():
             with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(header)
-                table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost,planner.coll_avoidance_cost,planner.optimizer.avoided_samples)).T,4)
+                table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost,planner.coll_avoidance_cost)).T,4)
                 writer.writerows(table)
             break    
         '''
