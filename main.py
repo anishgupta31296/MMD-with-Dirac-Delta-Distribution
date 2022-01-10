@@ -66,8 +66,8 @@ def main():
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=1.0,samples_param=100,optimizer='PVO',device='cpu')
+    planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
+    #planner=Planner(param=1.0,samples_param=100,optimizer='PVO',device='cpu')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
@@ -88,10 +88,18 @@ def main():
         start = timeit.default_timer()
         planner.get_controls(bot,obstacles_in_range, alpha, beta, delta)
         #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
-        #print(bot.get_velocity())
+        
         bot.set_controls(planner.optimal_control)
+        #print(bot.get_velocity())
+
         #print(timeit.default_timer() - start)
         times.append(timeit.default_timer() - start)
+        if(len(obstacles_in_range)):
+            np.save('test.npy',planner.optimizer.collision_cones)
+            controls=np.vstack((bot.lin_ctrl,bot.ang_ctrl)).T
+            np.save('controls.npy',controls)
+            
+            break
         '''
         if(len(obstacles_in_range)):
             print(planner.optimal_control)
