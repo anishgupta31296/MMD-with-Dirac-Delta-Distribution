@@ -138,9 +138,10 @@ class PVO:
             dt=Agent.dt*22*colliding/100
         else:
             dt=Agent.dt*2.5
-        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
-        self.mu=np.mean(cones, axis=1)
-        self.sigma=np.std(cones, axis=1)
+        dt=Agent.dt
+        self.cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
+        self.mu=np.mean(self.cones, axis=1)
+        self.sigma=np.std(self.cones, axis=1)
         c=self.mu+self.k*self.sigma
         return c    
 
@@ -194,7 +195,7 @@ class KLD:
             dt=Agent.dt*22*colliding/100
         else:
             dt=Agent.dt
-        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_noise, Obstacles.position_noise, Obstacles.velocity_noise,Agent.radius+Obstacles.radius,dt,Agent.controls_samples)
+        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
         cones = np.sort(cones,axis=1)
         #gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
         #desired_mean = -2.5

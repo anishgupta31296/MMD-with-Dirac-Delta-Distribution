@@ -41,7 +41,7 @@ def main():
         'head': {
             'weights': np.array([0.5, 0.5]),
             'means': np.array([0.0, 0.0]),
-            'stds': np.array([0.0, 0.0])
+            'stds': np.array([0.001, 0.001])
         }        
     }
 
@@ -67,7 +67,7 @@ def main():
     counter = 0
 
     #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=1.0,samples_param=50,optimizer='PVO',device='cpu')
+    planner=Planner(param=1.0,samples_param=100,optimizer='PVO',device='cpu')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
@@ -124,7 +124,7 @@ def main():
             for i in range(len(obstacles_in_range)):
                 fig = plt.figure()
                 plt.arrow(0, 0, 0, 0.15,width=0.2,length_includes_head=True, head_width=0.7, head_length=0.005,color='black')
-                cones=bot.collision_cones(obstacles[i],100)
+                cones=planner.final_cones#bot.collision_cones(obstacles[i],100)
                 #cones[cones<0]=0
                 ax = kdeplot(cones, label='Final Cones', shade=True, color='#ffa804')
                 #ax.axvline(x=0)
