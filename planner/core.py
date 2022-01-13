@@ -77,6 +77,7 @@ class Planner:
             else:
                 cons=np.array(coll_avoidance_cost_list).T
                 cost=beta*self.goal_reaching_cost+delta*(Agent.ang_ctrl**2)
+
                 if(np.any((cons<0).all(axis=1))):
                     min_cost=np.min(cost[(cons<0).all(axis=1)])
                     indcs=np.where(cost==min_cost)[0]
@@ -86,7 +87,7 @@ class Planner:
                         indcs=indcs[0]
                 else:
                     max_cons=np.max(cons,axis=1)
-                    indcs=np.argmin(cons)
+                    indcs=np.argmin(max_cons)
                 self.final_cones=self.optimizer.cones[indcs]
         else:
             cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost

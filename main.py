@@ -17,7 +17,7 @@ def main():
     gamma=0.1
     delta=0.1
     save=1
-    dist=0
+    dist=1
     samples_to_plot = 100
 
     times=[]
@@ -61,13 +61,13 @@ def main():
 
     bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
     obstacles = []
-    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
     #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=1.0,samples_param=100,optimizer='PVO',device='cpu')
+    planner=Planner(param=1.5,samples_param=100,optimizer='PVO',device='cpu')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
@@ -87,11 +87,9 @@ def main():
         counter=counter+1        
         start = timeit.default_timer()
         planner.get_controls(bot,obstacles_in_range, alpha, beta, delta)
-        #print('velocity:',bot.get_velocity(),'     controls',planner.optimal_control)
-        
         bot.set_controls(planner.optimal_control)
-        #print(bot.get_velocity())
-
+        print(bot.get_linear_velocity(),bot.get_angular_velocity())
+        
         #print(timeit.default_timer() - start)
         times.append(timeit.default_timer() - start)
         '''
@@ -133,7 +131,8 @@ def main():
             for i in range(len(obstacles_in_range)):
                 fig = plt.figure()
                 plt.arrow(0, 0, 0, 0.15,width=0.2,length_includes_head=True, head_width=0.7, head_length=0.005,color='black')
-                cones=planner.final_cones#bot.collision_cones(obstacles[i],100)
+                cones=planner.final_cones
+                #cones=bot.collision_cones(obstacles[i],100)
                 #cones[cones<0]=0
                 ax = kdeplot(cones, label='Final Cones', shade=True, color='#ffa804')
                 #ax.axvline(x=0)

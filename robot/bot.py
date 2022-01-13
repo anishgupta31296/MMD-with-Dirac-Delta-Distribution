@@ -118,15 +118,16 @@ class NonHolonomicBot(Agent):
 
     def set_controls(self, controls):
         bounds=self.get_bounds()
-        controls[0]=controls[0]+self.get_linear_velocity()
-        controls[0] = max(self.get_min_linear_velocity(), controls[0])
-        controls[0] = min(bounds[0],controls[0])
-        self.linear_velocity = controls[0]
-        controls[1]=controls[1]+self.get_angular_velocity()
-        controls[1] = max(-bounds[1], controls[1])
-        controls[1] = min(bounds[1], controls[1])
-        self.angular_velocity = controls[1]
-        self.head=self.head+controls[1]*self.dt
+        controls_final=np.zeros(2)
+        controls_final[0]=controls[0]+self.get_linear_velocity()
+        controls_final[0] = max(self.get_min_linear_velocity(), controls_final[0])
+        controls_final[0] = min(bounds[0],controls_final[0])
+        self.linear_velocity = controls_final[0]
+        controls_final[1]=controls[1]+self.get_angular_velocity()
+        controls_final[1] = max(-bounds[1], controls_final[1])
+        controls_final[1] = min(bounds[1], controls_final[1])
+        self.angular_velocity = controls_final[1]
+        self.head=self.head+controls_final[1]*self.dt
         velocity=self.get_linear_velocity()*np.array([np.cos(self.head),np.sin(self.head)])
         self.set_velocity(velocity)
         self.update_noise()
