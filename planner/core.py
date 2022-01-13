@@ -70,22 +70,22 @@ class Planner:
         self.coll_avoidance_cost=0
         if(len(Obstacles)>0):
             coll_avoidance_cost_list=self.get_coll_avoidance_cost(Agent,Obstacles)
-            self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
             if(self.constraint==0):
+                self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
                 cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
                 indcs=np.argmin(cost)
             else:
-                cons=self.coll_avoidance_cost 
+                cons=np.array(coll_avoidance_cost_list).T
                 cost=beta*self.goal_reaching_cost+delta*(Agent.ang_ctrl**2)
-                if(np.any(cons<0)):
-                    min_cost=np.min(cost[cons<0])
+                if(np.any((cons<0).all(axis=1))):
+                    min_cost=np.min(cost[(cons<0).all(axis=1)])
                     indcs=np.where(cost==min_cost)[0]
                     if(len(indcs)>1):
                         indcs=indc[np.random.choice(len(indcs))]
                     else:
                         indcs=indcs[0]
                 else:
-                    cost=beta*cons+delta*(Agent.ang_ctrl**2)
+                    max_cons=np.max(cons,axis=1)
                     indcs=np.argmin(cons)
                 self.final_cones=self.optimizer.cones[indcs]
         else:

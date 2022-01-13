@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 
 a=np.load('test.npy')
 b=np.load('controls.npy')
-c=np.where((b==(-0.2,-0.2)).all(axis=1))[0][0]
+b=np.round(b,2)
+print(np.round(b,2))
+c=np.where((b==(-0.2,0.18)).all(axis=1))[0][0]
 cones=a[c]
 fig = plt.figure()
 plt.arrow(0, 0, 0, 0.15,width=0.2,length_includes_head=True, head_width=0.7, head_length=0.005,color='black')

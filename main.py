@@ -17,7 +17,7 @@ def main():
     gamma=0.1
     delta=0.1
     save=1
-    dist=1
+    dist=0
     samples_to_plot = 100
 
     times=[]
@@ -61,13 +61,13 @@ def main():
 
     bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
     obstacles = []
-    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
-    planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    #planner=Planner(param=1.0,samples_param=100,optimizer='PVO',device='cpu')
+    #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
+    planner=Planner(param=1.0,samples_param=100,optimizer='PVO',device='cpu')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
@@ -94,13 +94,14 @@ def main():
 
         #print(timeit.default_timer() - start)
         times.append(timeit.default_timer() - start)
+        '''
         if(len(obstacles_in_range)):
             np.save('test.npy',planner.optimizer.collision_cones)
             controls=np.vstack((bot.lin_ctrl,bot.ang_ctrl)).T
             np.save('controls.npy',controls)
             
             break
-        '''
+        
         if(len(obstacles_in_range)):
             print(planner.optimal_control)
             header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost', 'MMD cost', 'Avoided Samples']
