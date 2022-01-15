@@ -3,17 +3,18 @@
 import numpy as np
 import seaborn as sns
 from random import sample
+import copy
 
 class Planner:
 
-    def __init__(self,param=0.1,samples_param=20,optimizer='Gaussian Approximation',device='cpu'):
+    def __init__(self,param=0.1,samples_param=20,optimizer='Gaussian Approximation',device='cpu',gaussian_approximation=False):
         self.noise_samples = None
         self.optimal_control = None
         self.reduced_samples=0
         self.constraint=0
         self.obs_priority=0
+        self.gaussian_approximation=gaussian_approximation
         self.final_cones=[]
-        self.final_cones_mu=[]
         if(optimizer=='MMD Dirac Delta'):
             from planner.optimizer import MMD_Dirac_Delta
             self.optimizer = MMD_Dirac_Delta(param,samples_param, device)
@@ -70,7 +71,23 @@ class Planner:
             
         return cost    
 
-    def get_controls(self,Agent,Obstacles, alpha, beta, delta):
+    @staticmethod
+    def gaussian_approx(dist):
+        means=np.mean(dist,axis=0)
+        stds=np.std(dist,axis=0)
+        return np.random.normal(means,stds,dist.shape)
+
+    def get_controls(self,Bot,Obs, alpha, beta, delta):
+        Agent=copy.copy(Bot)
+        Obstacles=copy.copy(Obs)
+        if(self.gaussian_approximation):
+            Agent.position_samples=self.gaussian_approx(Agent.position_samples)
+            Agent.controls_samples=self.gaussian_approx(Agent.controls_samples)
+            Agent.head_samples=self.gaussian_approx(Agent.head_samples)
+            for Obstacle in Obstacles:
+                Obstacle.position_samples=self.gaussian_approx(Obstacle.position_samples)
+                print('OBS:',np.mean(Obstacle.position_samples,axis=0)-Obstacle.position)
+                Obstacle.velocity_samples=self.gaussian_approx(Obstacle.velocity_samples)
         Agent.sample_controls()
         self.goal_reaching_cost=Agent.get_desired_velocity_cost()
         self.goal_reaching_cost=(self.goal_reaching_cost-np.amin(self.goal_reaching_cost))/(np.amax(self.goal_reaching_cost)-np.amin(self.goal_reaching_cost))

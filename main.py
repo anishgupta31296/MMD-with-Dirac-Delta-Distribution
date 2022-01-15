@@ -79,7 +79,7 @@ def main():
     counter = 0
 
     #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=1.5,samples_param=25,optimizer='KLD',device='cpu')
+    planner=Planner(param=1.5,samples_param=25,optimizer='PVO',device='cpu',gaussian_approximation=True)
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
