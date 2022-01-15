@@ -11,4 +11,5 @@ cones=a[c]
 fig = plt.figure()
 plt.arrow(0, 0, 0, 0.15,width=0.2,length_includes_head=True, head_width=0.7, head_length=0.005,color='black')
 ax = kdeplot(cones, label='Final Cones', shade=True, color='#ffa804')
+ax.set_xlim((-20, 15))
 plt.show()

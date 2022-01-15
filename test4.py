@@ -91,6 +91,7 @@ obs_noise_params = {
 }
 
 bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
+a=bot.copy()
 samples = 100
 plt.clf()
 ax = plt.gcf().gca()

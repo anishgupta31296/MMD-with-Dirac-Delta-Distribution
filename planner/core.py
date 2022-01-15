@@ -11,6 +11,9 @@ class Planner:
         self.optimal_control = None
         self.reduced_samples=0
         self.constraint=0
+        self.obs_priority=0
+        self.final_cones=[]
+        self.final_cones_mu=[]
         if(optimizer=='MMD Dirac Delta'):
             from planner.optimizer import MMD_Dirac_Delta
             self.optimizer = MMD_Dirac_Delta(param,samples_param, device)
@@ -21,6 +24,7 @@ class Planner:
             self.reduced_samples=samples_param
         elif(optimizer=='KLD'):
             from planner.optimizer import KLD
+            self.obs_priority=1
             self.optimizer = KLD(param,samples_param, device)
 
         else:
@@ -55,11 +59,14 @@ class Planner:
                 Obstacles[x].reduced_velocity_noise=obs_velocity
                 Obstacles[x].reduced_coeffs=obs_coeff[self.j]
                 R=Agent.radius+Obstacles[x].radius
+                self.final_cones.append(self.optimizer.cones)
                 cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
         else:
             for x in range(len(Obstacles)):
                 cost.append(np.zeros(Agent.controls_samples.shape[0]))
                 cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
+                self.final_cones.append(self.optimizer.cones)
+
             
         return cost    
 
@@ -71,10 +78,24 @@ class Planner:
         if(len(Obstacles)>0):
             coll_avoidance_cost_list=self.get_coll_avoidance_cost(Agent,Obstacles)
             if(self.constraint==0):
+                if(self.obs_priority==1 and len(Obstacles)>1):
+                    avoided_samples=np.zeros((len(Obstacles),len(self.final_cones[0])))
+                    for i in range(len(Obstacles)>1):
+                        avoided_samples[i,:]=np.sum(self.final_cones[0]<0,axis=1)/len(self.final_cones[0])
+                    avoided_samples_bool=avoided_samples>0.95
+                    avoided_samples_bool_sum=np.sum(avoided_samples_bool,axis=0)
+                    for i in range(len(self.final_cones[0])):
+                        if(avoided_samples_bool_sum[i]==len(Obstacles)):
+                            min_ind=np.argmin(avoided_samples[i,:])
+                            avoided_samples_bool[min_ind]=False
+                    coll_avoidance_cost_list=np.array(coll_avoidance_cost_list)
+                    coll_avoidance_cost_list[avoided_samples_bool]=coll_avoidance_cost_list[avoided_samples_bool]*0.000001       
+                
                 self.coll_avoidance_cost=np.sum(coll_avoidance_cost_list,axis=0).reshape(len(coll_avoidance_cost_list[0]))
                 cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
                 indcs=np.argmin(cost)
             else:
+                self.coll_avoidance_cost=coll_avoidance_cost_list
                 cons=np.array(coll_avoidance_cost_list).T
                 cost=beta*self.goal_reaching_cost+delta*(Agent.ang_ctrl**2)
 
@@ -86,9 +107,10 @@ class Planner:
                     else:
                         indcs=indcs[0]
                 else:
-                    max_cons=np.max(cons,axis=1)
+                    max_cons=np.max(cons,axis=1) + delta*(Agent.ang_ctrl**2 + Agent.lin_ctrl**2)
                     indcs=np.argmin(max_cons)
-                self.final_cones=self.optimizer.cones[indcs]
+                    #print(max_cons[indcs])
+                
         else:
             cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
             indcs=np.argmin(cost)

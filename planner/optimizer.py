@@ -126,40 +126,44 @@ class MMD:
 class PVO:
     def __init__(self, k, samples_param,device):
         self.k=k
-        self.samples=samples_param
+        self.samples=samples_param*samples_param
         self.device = device
 
     def get_cost(self,Agent,Obstacles):
         dt=Agent.dt
+        
         current_collision_cones=Agent.collision_cones(Obstacles,100)
         colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
+        print(colliding)
         if(colliding>90):
             dt=Agent.dt*22*colliding/100
         else:
             dt=Agent.dt
-        self.cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
+        
+        self.cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,dt,Agent.controls_samples)
         self.mu=np.mean(self.cones, axis=1)
         self.sigma=np.std(self.cones, axis=1)
         c=self.mu+self.k*self.sigma
         return c    
 
+
     def collision_cones(self, lin_ctrl, ang_ctrl,h, v, w,ap,op,ov ,R,dt,control_samples):
-        i=random.sample(range(ap.shape[0]),self.samples)
-        j=random.sample(range(ap.shape[0]),self.samples)
-        r1=ap[i].reshape(1,self.samples,1,2)
-        vo1=ov[j].reshape(1,1,self.samples,2)
-        ro1=op[j].reshape(1,1,self.samples,2)
-        h1=h[i].reshape(1,self.samples,1,1)
-        v_c=control_samples[i,0].reshape(1,self.samples,1,1)
-        w_c=control_samples[i,1].reshape(1,self.samples,1,1)
-        l_ctrl1=lin_ctrl.reshape(lin_ctrl.shape[0],1,1,1)
-        a_ctrl1=ang_ctrl.reshape(ang_ctrl.shape[0],1,1,1)
-        nh_v=(l_ctrl1+v+v_c)*np.concatenate((np.cos(h1+(a_ctrl1+w+w_c)*dt), np.sin(h1+(a_ctrl1+w+w_c)*dt)),axis=3)
+        r1=ap.reshape(1,self.samples,2)
+        vo1=ov.reshape(1,self.samples,2)
+        ro1=op.reshape(1,self.samples,2)
+        h1=h.reshape(1,self.samples,1)
+        v_c=control_samples[:,0].reshape(1,self.samples,1)
+        w_c=control_samples[:,1].reshape(1,self.samples,1)
+        l_ctrl1=lin_ctrl.reshape(lin_ctrl.shape[0],1,1)
+        a_ctrl1=ang_ctrl.reshape(ang_ctrl.shape[0],1,1)
+        nh_v=(l_ctrl1+v+v_c)*np.concatenate((np.cos(h1+(a_ctrl1+w+w_c)*dt), np.sin(h1+(a_ctrl1+w+w_c)*dt)),axis=2)
         vr=nh_v-vo1
         rr=r1-ro1
-        cones=np.square(np.sum(vr*rr, axis=3))+ np.sum(np.square(vr), axis=3)*((R)**2 - np.sum(np.square(rr), axis=3))
-        cones=cones.reshape(lin_ctrl.shape[0],self.samples*self.samples)
+        cones=np.square(np.sum(vr*rr, axis=2))+ np.sum(np.square(vr), axis=2)*((R)**2 - np.sum(np.square(rr), axis=2))
+        cones=cones.reshape(lin_ctrl.shape[0],self.samples)
         return cones
+
+
 
 class KLD:
     def __init__(self, k, samples_param,device):
@@ -194,14 +198,14 @@ class KLD:
         else:
             dt=Agent.dt
         '''
-        cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,Agent.dt,Agent.controls_samples)
-        cones = np.sort(cones,axis=1)
+        self.cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,dt,Agent.controls_samples)
+        self.cones = np.sort(self.cones,axis=1)
         #gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
         #desired_mean = -2.5
         #desired_std = 1.41414
         kld=[]
-        for i in range(cones.shape[0]):
-            cones1=cones[i,:].reshape(-1, 1)
+        for i in range(self.cones.shape[0]):
+            cones1=self.cones[i,:].reshape(-1, 1)
             kld_cost=self.get_kld_cost(cones1)
             kld.append(kld_cost)
             #gmm.fit(cones.reshape(-1, 1))

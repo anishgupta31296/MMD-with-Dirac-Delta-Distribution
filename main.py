@@ -17,9 +17,9 @@ def main():
     gamma=0.1
     delta=0.1
     save=1
-    dist=1
+    dist=0
     samples_to_plot = 100
-
+    steps=5
     times=[]
 
     agent_noise_params = {
@@ -57,17 +57,29 @@ def main():
             'stds': np.array([[0.001, 0.001],[0.001,0.001]])
         }
     }
-
-
+    '''
+    obs_noise_params = {
+        'position': {
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'stds': np.array([[0.32, 0.32],[0.32,0.32]])
+        },
+        'velocity': {
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
+        }
+    }
+    '''
     bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
     obstacles = []
-    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
     #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=1.5,samples_param=100,optimizer='PVO',device='cpu')
+    planner=Planner(param=1.5,samples_param=25,optimizer='KLD',device='cpu')
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
@@ -88,10 +100,10 @@ def main():
         start = timeit.default_timer()
         planner.get_controls(bot,obstacles_in_range, alpha, beta, delta)
         bot.set_controls(planner.optimal_control)
-        print(bot.get_linear_velocity(),bot.get_angular_velocity())
-        
-        #print(timeit.default_timer() - start)
+        print(planner.optimal_control)
+        #print(bot.get_linear_velocity(),bot.get_angular_velocity())
         times.append(timeit.default_timer() - start)
+
         '''
         if(len(obstacles_in_range)):
             np.save('test.npy',planner.optimizer.collision_cones)
@@ -101,18 +113,17 @@ def main():
             break
         
         if(len(obstacles_in_range)):
-            print(planner.optimal_control)
-            header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost', 'MMD cost', 'Avoided Samples']
-            with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+            steps=steps-1
+            header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost','MU','SIGMA' ,'PVO cost']
+            with open(str(counter)+'.csv', 'w', encoding='UTF8', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(header)
-                table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost,planner.coll_avoidance_cost)).T,4)
+                table=np.round(np.vstack((bot.lin_ctrl,bot.ang_ctrl,planner.goal_reaching_cost,planner.optimizer.mu,planner.optimizer.sigma,planner.coll_avoidance_cost)).T,4)
                 writer.writerows(table)
-            break    
+            if(steps==0):
+                break    
         '''
-        #print(np.array(times).mean())
-        #bot.set_linear_acceleration(control)
-        #.append(bot.get_linear_velocity())
+
         ax.add_artist(plt.Circle(bot.get_position(), bot.radius, facecolor='#059efb', edgecolor='black', zorder=100))
         plt.plot(np.array(bot.path)[:,0], np.array(bot.path)[:,1], '#059efb', zorder=2)
         plt.arrow(bot.get_position()[0], bot.get_position()[1], 1.5*bot.get_velocity()[0], 1.5*bot.get_velocity()[1],length_includes_head=True, head_width=0.3, head_length=0.2)
