@@ -121,7 +121,7 @@
 1 and 3 OBS:
     obs_noise_params = {
         'position': {
-            'weights': np.array([0.5, 0.5]),
+            'weights': np.array([0.2, 0.8]),
             'means': np.array([[0.4, -0.1],[-0.4,0.1]]),
             'stds': np.array([[0.15, 0.15],[0.2,0.2]])
         },

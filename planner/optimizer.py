@@ -131,15 +131,14 @@ class PVO:
 
     def get_cost(self,Agent,Obstacles):
         dt=Agent.dt
-        
+        '''
         current_collision_cones=Agent.collision_cones(Obstacles,100)
         colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
-        print(colliding)
         if(colliding>90):
             dt=Agent.dt*22*colliding/100
         else:
             dt=Agent.dt
-        
+        '''
         self.cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,dt,Agent.controls_samples)
         self.mu=np.mean(self.cones, axis=1)
         self.sigma=np.std(self.cones, axis=1)

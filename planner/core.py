@@ -78,15 +78,15 @@ class Planner:
         return np.random.normal(means,stds,dist.shape)
 
     def get_controls(self,Bot,Obs, alpha, beta, delta):
-        Agent=copy.copy(Bot)
-        Obstacles=copy.copy(Obs)
+        Agent=copy.deepcopy(Bot)
+        Obstacles=copy.deepcopy(Obs)
         if(self.gaussian_approximation):
             Agent.position_samples=self.gaussian_approx(Agent.position_samples)
             Agent.controls_samples=self.gaussian_approx(Agent.controls_samples)
             Agent.head_samples=self.gaussian_approx(Agent.head_samples)
             for Obstacle in Obstacles:
                 Obstacle.position_samples=self.gaussian_approx(Obstacle.position_samples)
-                print('OBS:',np.mean(Obstacle.position_samples,axis=0)-Obstacle.position)
+                #print('OBS:',np.mean(Obstacle.position_samples,axis=0)-Obstacle.position)
                 Obstacle.velocity_samples=self.gaussian_approx(Obstacle.velocity_samples)
         Agent.sample_controls()
         self.goal_reaching_cost=Agent.get_desired_velocity_cost()
@@ -127,6 +127,7 @@ class Planner:
                     max_cons=np.max(cons,axis=1) + delta*(Agent.ang_ctrl**2 + Agent.lin_ctrl**2)
                     indcs=np.argmin(max_cons)
                     #print(max_cons[indcs])
+                print(self.optimizer.mu[indcs], self.optimizer.sigma[indcs])
                 
         else:
             cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost

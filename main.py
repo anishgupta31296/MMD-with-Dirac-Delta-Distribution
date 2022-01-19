@@ -11,14 +11,14 @@ import csv
 
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
-    sensor_range=10
+    sensor_range=8
     alpha=1
     beta=0.1
     gamma=0.1
     delta=0.1
     save=1
     dist=0
-    samples_to_plot = 100
+    samples_to_plot = 250
     steps=5
     times=[]
 
@@ -29,12 +29,12 @@ def main():
             'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         },
         'velocity': {
-            'weights': np.array([0.3, 0.7]),
+            'weights': np.array([0.5, 0.5]),
             'means': np.array([[-0.0, 0.0],[0.0,-0.0]]),
             'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         },
         'controls': {
-            'weights': np.array([0.4, 0.6]),
+            'weights': np.array([0.5, 0.5]),
             'means': np.array([[-0.0, 0.0],[0.0,-0.0]]),
             'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         },
@@ -47,14 +47,14 @@ def main():
 
     obs_noise_params = {
         'position': {
-            'weights': np.array([0.5, 0.5]),
+            'weights': np.array([0.2, 0.8]),
             'means': np.array([[0.4, -0.1],[-0.4,0.1]]),
-            'stds': np.array([[0.15, 0.15],[0.2,0.2]])
+            'stds': np.array([[0.15, 0.1],[0.15,0.1]])
         },
         'velocity': {
             'weights': np.array([0.5, 0.5]),
             'means': np.array([[0.0, 0.0],[0.0,0.0]]),
-            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         }
     }
     '''
@@ -71,24 +71,22 @@ def main():
         }
     }
     '''
-    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
+    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
     obstacles = []
-    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     counter = 0
 
     #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=1.5,samples_param=25,optimizer='PVO',device='cpu',gaussian_approximation=True)
+    planner=Planner(param=1.5,samples_param=25,optimizer='KLD',device='cpu',gaussian_approximation=False)
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
         ax = plt.gcf().gca()
         ax.set_xlim((-5, 20))
-        # ax.set_xlim((0, 12))
         ax.set_ylim((-5,20))
-        # ax.set_ylim((0, 12))
-        ax.add_artist(plt.Circle(bot.get_position(), bot.sensor_range, color='gray', alpha=0.1))
+        ax.add_artist(plt.Circle(bot.get_position(), bot.sensor_range-bot.radius, color='gray', alpha=0.1))
         for i, obs in enumerate(obstacles):
             if bot.in_sensor_range(obs):
                 obstacles_in_range.append(obs)
@@ -100,7 +98,7 @@ def main():
         start = timeit.default_timer()
         planner.get_controls(bot,obstacles_in_range, alpha, beta, delta)
         bot.set_controls(planner.optimal_control)
-        print(planner.optimal_control)
+        #print(planner.optimal_control)
         #print(bot.get_linear_velocity(),bot.get_angular_velocity())
         times.append(timeit.default_timer() - start)
 
