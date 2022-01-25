@@ -32,9 +32,8 @@ class MMD_Dirac_Delta:
             dt=Agent.dt*22*colliding/100
         else:
             dt=Agent.dt*2.5
-        #dt=Agent.dt*1
-        self.collision_cones= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.reduced_head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.reduced_position_noise, Obstacles.reduced_position_noise, Obstacles.reduced_velocity_noise,Agent.radius+Obstacles.radius,dt,Agent.reduced_controls_samples)
-        cones=self.collision_cones.copy()
+        self.collision_cones_list= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.reduced_head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.reduced_position_noise, Obstacles.reduced_position_noise, Obstacles.reduced_velocity_noise,Agent.radius+Obstacles.radius,dt,Agent.reduced_controls_samples)
+        cones=self.collision_cones_list.copy()
         cones[cones<0]=0
         cones=cones[..., np.newaxis]
         coeffs=Agent.control_coeff*Obstacles.reduced_coeffs

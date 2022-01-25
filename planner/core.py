@@ -60,13 +60,13 @@ class Planner:
                 Obstacles[x].reduced_velocity_noise=obs_velocity
                 Obstacles[x].reduced_coeffs=obs_coeff[self.j]
                 R=Agent.radius+Obstacles[x].radius
-                self.final_cones.append(self.optimizer.cones)
                 cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
+                self.final_cones.append(self.optimizer.collision_cones_list)
         else:
             for x in range(len(Obstacles)):
                 cost.append(np.zeros(Agent.controls_samples.shape[0]))
                 cost[x]=self.optimizer.get_cost(Agent,Obstacles[x])
-                self.final_cones.append(self.optimizer.cones)
+                self.final_cones.append(self.optimizer.collision_cones_list)
 
             
         return cost    
@@ -78,6 +78,7 @@ class Planner:
         return np.random.normal(means,stds,dist.shape)
 
     def get_controls(self,Bot,Obs, alpha, beta, delta):
+        Bot.sample_controls()
         Agent=copy.deepcopy(Bot)
         Obstacles=copy.deepcopy(Obs)
         if(self.gaussian_approximation):
@@ -88,7 +89,7 @@ class Planner:
                 Obstacle.position_samples=self.gaussian_approx(Obstacle.position_samples)
                 #print('OBS:',np.mean(Obstacle.position_samples,axis=0)-Obstacle.position)
                 Obstacle.velocity_samples=self.gaussian_approx(Obstacle.velocity_samples)
-        Agent.sample_controls()
+
         self.goal_reaching_cost=Agent.get_desired_velocity_cost()
         self.goal_reaching_cost=(self.goal_reaching_cost-np.amin(self.goal_reaching_cost))/(np.amax(self.goal_reaching_cost)-np.amin(self.goal_reaching_cost))
         self.coll_avoidance_cost=0

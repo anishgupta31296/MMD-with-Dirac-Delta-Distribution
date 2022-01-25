@@ -11,7 +11,7 @@ import csv
 
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
-    sensor_range=8
+    sensor_range=80
     alpha=1
     beta=0.1
     gamma=0.1
@@ -71,15 +71,16 @@ def main():
         }
     }
     '''
-    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
+    bot=NonHolonomicBot(np.array([1.5,1.5]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
     obstacles = []
-    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+
     counter = 0
 
-    #planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
-    planner=Planner(param=1.5,samples_param=25,optimizer='KLD',device='cpu',gaussian_approximation=False)
+    planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
+    #planner=Planner(param=1.5,samples_param=25,optimizer='KLD',device='cpu',gaussian_approximation=False)
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
@@ -91,8 +92,9 @@ def main():
             if bot.in_sensor_range(obs):
                 obstacles_in_range.append(obs)
             obs.set_velocity()
-            ax.add_artist(plt.Circle(obs.get_position(), obs.radius, facecolor='#ffa804', edgecolor='black', zorder=100))
+            ax.add_artist(plt.Circle(obs.get_position(), obs.radius, facecolor='#ffa804', edgecolor='black', zorder=3))
             plt.plot(np.array(obs.path)[:,0],np.array(obs.path)[:,1], '#ffa804', zorder=1)
+            plt.text(obs.get_position()[0]-obs.radius/3, obs.get_position()[1]-obs.radius/3,str(i+1), fontsize = 12, zorder=4)
 
         counter=counter+1        
         start = timeit.default_timer()
@@ -102,14 +104,8 @@ def main():
         #print(bot.get_linear_velocity(),bot.get_angular_velocity())
         times.append(timeit.default_timer() - start)
 
+
         '''
-        if(len(obstacles_in_range)):
-            np.save('test.npy',planner.optimizer.collision_cones)
-            controls=np.vstack((bot.lin_ctrl,bot.ang_ctrl)).T
-            np.save('controls.npy',controls)
-            
-            break
-        
         if(len(obstacles_in_range)):
             steps=steps-1
             header = ['V(Linear Velocity)', 'W(Angular Velocity)', 'goal_reaching_cost','MU','SIGMA' ,'PVO cost']
@@ -122,20 +118,29 @@ def main():
                 break    
         '''
 
-        ax.add_artist(plt.Circle(bot.get_position(), bot.radius, facecolor='#059efb', edgecolor='black', zorder=100))
-        plt.plot(np.array(bot.path)[:,0], np.array(bot.path)[:,1], '#059efb', zorder=2)
-        plt.arrow(bot.get_position()[0], bot.get_position()[1], 1.5*bot.get_velocity()[0], 1.5*bot.get_velocity()[1],length_includes_head=True, head_width=0.3, head_length=0.2)
+        ax.add_artist(plt.Circle(bot.get_position(), bot.radius, facecolor='#059efb', edgecolor='black', zorder=3))
+        plt.plot(np.array(bot.path)[:,0], np.array(bot.path)[:,1], '#059efb', zorder=1)
         itr=random.sample(range(10000),samples_to_plot)
         for i in range(samples_to_plot):
-            ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=3, alpha=0.08))
+            ax.add_artist(plt.Circle(bot.position_samples[itr[i],:], bot.radius, color='#059efb', zorder=2, alpha=0.08))
         
         for j in range(len(obstacles)):
             for i in range(samples_to_plot):
                 ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
+
+        plt.arrow(bot.get_position()[0], bot.get_position()[1], 1.5*bot.get_velocity()[0], 1.5*bot.get_velocity()[1],length_includes_head=True, head_width=0.3, head_length=0.2, zorder=4)
+ 
         plt.draw()
         plt.pause(0.001)
         if(save==1):
             plt.gcf().savefig('../MMD Python Outputs/{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
+        if(len(obstacles_in_range)==3):
+            for i in range(len(obstacles_in_range)):
+                np.save('test'+str(i)+'.npy',planner.final_cones[i])
+                controls=np.vstack((bot.lin_ctrl,bot.ang_ctrl)).T
+            np.save('controls.npy',controls)
+            
+            break
         if len(obstacles_in_range) > 0 and dist==1:
             for i in range(len(obstacles_in_range)):
                 fig = plt.figure()
