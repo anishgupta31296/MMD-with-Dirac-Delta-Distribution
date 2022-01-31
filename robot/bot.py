@@ -6,13 +6,13 @@ from .core import Agent
 
 class NonHolonomicBot(Agent):
 
-    def __init__(self, position, goal, noise_params, sensor_range=7, dt=1/10, noise_samples=10000, radius=1,   name='Bot'):
+    def __init__(self, position, goal, noise_params, sensor_range=7, radius=1, dt=1/10, noise_samples=10000, name='Bot'):
         self.min_linear_velocity = 0.4
         self.max_linear_velocity = 1.5
         self.max_angular_velocity = 1.0
         self.sensor_range = sensor_range
         self.head=math.atan2(goal[1]-position[1],goal[0]-position[0])
-        self.linear_velocity = self.max_linear_velocity
+        self.linear_velocity = self.min_linear_velocity
         self.angular_velocity = 0
         velocity=self.linear_velocity*np.array([np.cos(self.head),np.sin(self.head)])
         Agent.__init__(self, position, velocity, goal, noise_params, noise_samples, radius, dt, name)
@@ -69,8 +69,13 @@ class NonHolonomicBot(Agent):
         if (self.get_position() - obstacle.get_position()).__pow__(2).sum() < self.sensor_range**2:
             r = self.get_position() - obstacle.get_position()
             v = self.get_velocity() - obstacle.get_velocity()
+            #current_collision_cones=self.collision_cones(obstacle,100)
+            #colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
+            #if(colliding>99.9):
+            #    return False
             if r @ v < 0:
                 return True
+
         return False
 
     def get_linear_velocity(self):

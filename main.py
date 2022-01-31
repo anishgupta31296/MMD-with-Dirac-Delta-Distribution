@@ -11,7 +11,7 @@ import csv
 
 def main():
     os.system("sudo rm ../MMD\ Python\ Outputs/*.png")
-    sensor_range=80
+    sensor_range=10
     alpha=1
     beta=0.1
     gamma=0.1
@@ -21,7 +21,11 @@ def main():
     samples_to_plot = 250
     steps=5
     times=[]
-
+    obstacles = []
+    counter = 0
+    radius=0.65
+    control_costs=[]
+    dist=[]
     agent_noise_params = {
         'position': {
             'weights': np.array([0.5, 0.5]),
@@ -45,48 +49,46 @@ def main():
         }        
     }
 
-    obs_noise_params = {
+    obs_noise_params1 = {
         'position': {
-            'weights': np.array([0.2, 0.8]),
-            'means': np.array([[0.4, -0.1],[-0.4,0.1]]),
-            'stds': np.array([[0.15, 0.1],[0.15,0.1]])
+            'weights': np.array([0.4, 0.6]),
+            'means': np.array([[0.3, -0.2],[0.03,-0.04]]),
+            'stds': np.array([[0.25, 0.05],[0.02,0.02]])
         },
         'velocity': {
             'weights': np.array([0.5, 0.5]),
-            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'means': np.array([[-0.0, 0.0],[-0.0,0.0]]),
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
+        }
+    } 
+    
+    obs_noise_params2 = {
+        'position': {
+            'weights': np.array([0.4, 0.6]),
+            'means': np.array([[-0.3, 0.2],[0.03,-0.04]]),
+            'stds': np.array([[0.25, 0.05],[0.02,0.02]])
+        },
+        'velocity': {
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[-0.0, 0.0],[-0.0,0.0]]),
             'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         }
     }
-    '''
-    obs_noise_params = {
-        'position': {
-            'weights': np.array([0.5, 0.5]),
-            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
-            'stds': np.array([[0.32, 0.32],[0.32,0.32]])
-        },
-        'velocity': {
-            'weights': np.array([0.5, 0.5]),
-            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
-            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
-        }
-    }
-    '''
-    bot=NonHolonomicBot(np.array([1.5,1.5]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
-    obstacles = []
-    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-
-    counter = 0
-
-    planner=Planner(param=0.1,samples_param=20,optimizer='MMD Dirac Delta',device='cuda:0')
+    bot=NonHolonomicBot(np.array([0,0]), np.array([0, 25]), agent_noise_params, sensor_range=sensor_range)
+    obstacles.append(Obstacle(position=np.array([-3.0,12]), goal=np.array([0,0]), noise_params=obs_noise_params2))
+    obstacles.append(Obstacle(position=np.array([3.0,12]), goal=np.array([0,0]), noise_params=obs_noise_params1))
+    obstacles.append(Obstacle(position=np.array([0,22]), goal=np.array([0,0]), noise_params=obs_noise_params2))
+    obstacles.append(Obstacle(position=np.array([6.0,20.5]), goal=np.array([0,0]), noise_params=obs_noise_params1))
+    obstacles.append(Obstacle(position=np.array([-6.0,20.5]), goal=np.array([0,0]), noise_params=obs_noise_params1))
+    planner=Planner(param=1.5,samples_param=100,optimizer='PVO',device='cpu',gaussian_approximation=True)
     #planner=Planner(param=1.5,samples_param=25,optimizer='KLD',device='cpu',gaussian_approximation=False)
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
         plt.clf()
         ax = plt.gcf().gca()
-        ax.set_xlim((-5, 20))
-        ax.set_ylim((-5,20))
+        ax.set_ylim((-5,25))
+        ax.set_xlim((-15, 15))
+
         ax.add_artist(plt.Circle(bot.get_position(), bot.sensor_range-bot.radius, color='gray', alpha=0.1))
         for i, obs in enumerate(obstacles):
             if bot.in_sensor_range(obs):
@@ -99,7 +101,14 @@ def main():
         counter=counter+1        
         start = timeit.default_timer()
         planner.get_controls(bot,obstacles_in_range, alpha, beta, delta)
+        control_costs.append(planner.optimal_control[0]**2+planner.optimal_control[1]**2)
+        
+        for i in range(len(obstacles)):
+            dist.append(np.linalg.norm(bot.position-obstacles[i].position))
+
+    
         bot.set_controls(planner.optimal_control)
+
         #print(planner.optimal_control)
         #print(bot.get_linear_velocity(),bot.get_angular_velocity())
         times.append(timeit.default_timer() - start)
@@ -116,8 +125,13 @@ def main():
                 writer.writerows(table)
             if(steps==0):
                 break    
+        
+        if(len(obstacles_in_range)):
+            print(bot.position)
+            print(obstacles[0].position)
+            print(obstacles[1].position)
+            print(obstacles[2].position)
         '''
-
         ax.add_artist(plt.Circle(bot.get_position(), bot.radius, facecolor='#059efb', edgecolor='black', zorder=3))
         plt.plot(np.array(bot.path)[:,0], np.array(bot.path)[:,1], '#059efb', zorder=1)
         itr=random.sample(range(10000),samples_to_plot)
@@ -129,18 +143,18 @@ def main():
                 ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
 
         plt.arrow(bot.get_position()[0], bot.get_position()[1], 1.5*bot.get_velocity()[0], 1.5*bot.get_velocity()[1],length_includes_head=True, head_width=0.3, head_length=0.2, zorder=4)
- 
         plt.draw()
         plt.pause(0.001)
         if(save==1):
             plt.gcf().savefig('../MMD Python Outputs/{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
+        '''
         if(len(obstacles_in_range)==3):
             for i in range(len(obstacles_in_range)):
                 np.save('test'+str(i)+'.npy',planner.final_cones[i])
                 controls=np.vstack((bot.lin_ctrl,bot.ang_ctrl)).T
             np.save('controls.npy',controls)
-            
             break
+        '''
         if len(obstacles_in_range) > 0 and dist==1:
             for i in range(len(obstacles_in_range)):
                 fig = plt.figure()
@@ -156,6 +170,6 @@ def main():
                 fig.savefig('../MMD Python Outputs/dist-{}.png'.format( str(int(counter)).zfill(4)), dpi=300)
                 # plt.show()
                 plt.close(fig)
-
+    print(sum(control_costs),min(dist),counter)
 if __name__ == '__main__':
     main()

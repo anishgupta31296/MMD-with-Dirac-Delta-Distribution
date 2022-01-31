@@ -127,9 +127,7 @@ class Planner:
                 else:
                     max_cons=np.max(cons,axis=1) + delta*(Agent.ang_ctrl**2 + Agent.lin_ctrl**2)
                     indcs=np.argmin(max_cons)
-                    #print(max_cons[indcs])
-                print(self.optimizer.mu[indcs], self.optimizer.sigma[indcs])
-                
+
         else:
             cost=alpha*self.coll_avoidance_cost+beta*self.goal_reaching_cost
             indcs=np.argmin(cost)
@@ -159,7 +157,7 @@ class Planner:
             alpha=np.ones(big_sample_size_row)
             coeff=(np.linalg.inv(kz)@kzx@alpha)/big_sample_size_row
             reduced_dist_coeff=np.append(reduced_dist_coeff,coeff)
-        return reduced_dist,reduced_dist_coeff
+        return reduced_dist, reduced_dist_coeff
 
     def generate_kernel_matrix(self, dist, dist1):
         r1=dist.shape[0]

@@ -78,8 +78,8 @@
 
     obstacles.append(Obstacle(position=np.array([-2.5,15]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([2.5,15]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    ax.set_ylim((-5,20))
-    ax.set_xlim((-12.5, 12.5))
+        ax.set_ylim((-5,20))
+        ax.set_xlim((-12.5, 12.5))
 
 
 2 OBS V:
@@ -112,34 +112,108 @@
 
     obstacles.append(Obstacle(position=np.array([11.5,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,11.5]), goal=np.array([0,0]), noise_params=obs_noise_params2))
-            ax = plt.gcf().gca()
+
         ax.set_xlim((-5, 20))
-        # ax.set_xlim((0, 12))
         ax.set_ylim((-5,20))
 
 
 1 and 3 OBS:
     obs_noise_params = {
         'position': {
-            'weights': np.array([0.2, 0.8]),
-            'means': np.array([[0.4, -0.1],[-0.4,0.1]]),
-            'stds': np.array([[0.15, 0.15],[0.2,0.2]])
+            'weights': np.array([0.4, 0.6]),
+            'means': np.array([[0.3, -0.2],[-0.3,0.2]]),
+            'stds': np.array([[0.2, 0.05],[0.2,0.05]])
         },
         'velocity': {
             'weights': np.array([0.3, 0.7]),
-            'means': np.array([[-0.07, 0.03],[-0.05,0.0214]]),
-            'stds': np.array([[0.01, 0.06],[0.02,0.04]])
+            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
         }
     }
 
-    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=8)
-    obstacles = []
-    obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    bot=NonHolonomicBot(np.array([0,0]), np.array([20,20]), agent_noise_params, sensor_range=sensor_range)
+    #obstacles.append(Obstacle(position=np.array([10,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
+    #obstacles.append(Obstacle(position=np.array([7,10]), goal=np.array([0,0]), noise_params=obs_noise_params))
     obstacles.append(Obstacle(position=np.array([7,7]), goal=np.array([0,0]), noise_params=obs_noise_params))
-    counter = 0
-            plt.clf()
-        ax = plt.gcf().gca()
+
         ax.set_xlim((-5, 20))
-        # ax.set_xlim((0, 12))
         ax.set_ylim((-5,20))
+
+
+8 OBS
+
+    obs_noise_params1 = {
+        'position': {
+            'weights': np.array([0.4, 0.6]),
+            'means': radius*np.array([[0.3, -0.2],[-0.3,0.2]]),
+            'stds': radius*np.array([[0.2, 0.05],[0.2,0.05]])
+        },
+        'velocity': {
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[-0.01, 0.01],[-0.01,0.01]]),
+            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
+        }
+    }
+    
+    obs_noise_params2 = {
+        'position': {
+            'weights': np.array([0.2, 0.8]),
+            'means': radius*np.array([[-0.3, 0.2],[-0.3,0.2]]),
+            'stds': radius*np.array([[0.2, 0.05],[0.2,0.5]])
+        },
+        'velocity': {
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[-0.01, 0.01],[-0.01,0.01]]),
+            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
+        }
+    }
+
+    obs_noise_params3 = {
+        'position': {
+            'weights': np.array([0.2, 0.8]),
+            'means': radius*np.array([[-0.4, 0.1],[-0.1,0.025]]),
+            'stds': radius*np.array([[0.15, 0.15],[0.1,0.1]])
+        },
+        'velocity': {
+            'weights': np.array([0.5, 0.5]),
+            'means': np.array([[-0.01, 0.01],[-0.01,0.01]]),
+            'stds': np.array([[0.001, 0.001],[0.001,0.001]])
+        }
+    }
+
+    obs_noise_params4 = {
+        'position': {
+            'weights': np.array([0.4, 0.6]),
+            'means': radius*np.array([[-0.3, 0.2],[-0.3,0.2]]),
+            'stds': radius*np.array([[0.2, 0.05],[0.2,0.05]])
+        },
+        'velocity': {
+            'weights': np.array([0.3, 0.7]),
+            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
+        }
+    }
+
+    obs_noise_params5 = {
+        'position': {
+            'weights': np.array([0.4, 0.6]),
+            'means': radius*np.array([[0.3, -0.2],[0.3,-0.2]]),
+            'stds': radius*np.array([[0.2, 0.05],[0.2,0.05]])
+        },
+        'velocity': {
+            'weights': np.array([0.3, 0.7]),
+            'means': np.array([[0.0, 0.0],[0.0,0.0]]),
+            'stds': np.array([[0.01, 0.01],[0.01,0.01]])
+        }
+    }
+
+    bot=NonHolonomicBot(np.array([-15,7]), np.array([7, -7]), agent_noise_params, sensor_range=sensor_range, radius=radius)
+    obstacles.append(Obstacle(position=np.array([-4, 4]), goal=np.array([13,10]), noise_params=obs_noise_params1, velocity=np.array([-0.75, 0.3]),radius=radius))
+    obstacles.append(Obstacle(position=np.array([-2, 2]), goal=np.array([13,-10]), noise_params=obs_noise_params1, velocity=np.array([-0.75, 0.3]),radius=radius))
+    obstacles.append(Obstacle(position=np.array([0, 0]), goal=np.array([0,0]), noise_params=obs_noise_params4, velocity=np.array([-0.75, 0.3]),radius=radius))
+    obstacles.append(Obstacle(position=np.array([2, -2]), goal=np.array([13,10]), noise_params=obs_noise_params2, velocity=np.array([-0.75, 0.3]),radius=radius))
+    obstacles.append(Obstacle(position=np.array([-4.25, -4.25]), goal=np.array([13,-10]), noise_params=obs_noise_params4, velocity=np.array([-0.75, 0.3]),radius=radius))
+    obstacles.append(Obstacle(position=np.array([-2, -2]), goal=np.array([0,0]), noise_params=obs_noise_params5, velocity=np.array([-0.75, 0.3]),radius=radius))
+    obstacles.append(Obstacle(position=np.array([6, -6]), goal=np.array([0,0]), noise_params=obs_noise_params3, velocity=np.array([-0.75, 0.3]),radius=radius))
+    obstacles.append(Obstacle(position=np.array([8, -8]), goal=np.array([0,0]), noise_params=obs_noise_params3, velocity=np.array([-0.75, 0.3]),radius=radius))
+
