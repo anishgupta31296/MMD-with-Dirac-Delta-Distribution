@@ -15,7 +15,7 @@ class Planner:
         self.obs_priority=0
         self.gaussian_approximation=gaussian_approximation
         self.final_cones=[]
-        if(optimizer=='MMD Dirac Delta'):
+        if(optimizer=='MMD_Dirac_Delta'):
             from planner.optimizer import MMD_Dirac_Delta
             self.optimizer = MMD_Dirac_Delta(param,samples_param, device)
             self.reduced_samples=samples_param

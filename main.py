@@ -75,12 +75,12 @@ def main():
         }
     }
     bot=NonHolonomicBot(np.array([0,0]), np.array([0, 25]), agent_noise_params, sensor_range=sensor_range)
-    obstacles.append(Obstacle(position=np.array([-3.0,12]), goal=np.array([0,0]), noise_params=obs_noise_params2))
-    obstacles.append(Obstacle(position=np.array([3.0,12]), goal=np.array([0,0]), noise_params=obs_noise_params1))
+    obstacles.append(Obstacle(position=np.array([-3.1,12]), goal=np.array([0,0]), noise_params=obs_noise_params2))
+    obstacles.append(Obstacle(position=np.array([3.1,12]), goal=np.array([0,0]), noise_params=obs_noise_params1))
     obstacles.append(Obstacle(position=np.array([0,22]), goal=np.array([0,0]), noise_params=obs_noise_params2))
-    obstacles.append(Obstacle(position=np.array([6.0,20.5]), goal=np.array([0,0]), noise_params=obs_noise_params1))
-    obstacles.append(Obstacle(position=np.array([-6.0,20.5]), goal=np.array([0,0]), noise_params=obs_noise_params1))
-    planner=Planner(param=1.5,samples_param=100,optimizer='PVO',device='cpu',gaussian_approximation=True)
+    obstacles.append(Obstacle(position=np.array([6.2,20]), goal=np.array([0,0]), noise_params=obs_noise_params1))
+    obstacles.append(Obstacle(position=np.array([-6.2,20]), goal=np.array([0,0]), noise_params=obs_noise_params1))
+    planner=Planner(param=1,samples_param=25,optimizer='KLD',device='cuda:0',gaussian_approximation=False)
     #planner=Planner(param=1.5,samples_param=25,optimizer='KLD',device='cpu',gaussian_approximation=False)
     while (bot.goal-bot.position).__pow__(2).sum() > 1:
         obstacles_in_range = []
@@ -110,7 +110,7 @@ def main():
         bot.set_controls(planner.optimal_control)
 
         #print(planner.optimal_control)
-        #print(bot.get_linear_velocity(),bot.get_angular_velocity())
+        print(bot.get_linear_velocity(),bot.get_angular_velocity())
         times.append(timeit.default_timer() - start)
 
 

@@ -73,5 +73,4 @@ for i in range(samples):
 for j in range(len(obstacles)):
     for i in range(samples):
         ax.add_artist(plt.Circle(obstacles[j].position_samples[itr[i],:], obstacles[j].radius, color='#ffa804', zorder=2, alpha=0.08))
-bot.sample_controls()
 plt.show()

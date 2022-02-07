@@ -69,10 +69,10 @@ class NonHolonomicBot(Agent):
         if (self.get_position() - obstacle.get_position()).__pow__(2).sum() < self.sensor_range**2:
             r = self.get_position() - obstacle.get_position()
             v = self.get_velocity() - obstacle.get_velocity()
-            #current_collision_cones=self.collision_cones(obstacle,100)
-            #colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
-            #if(colliding>99.9):
-            #    return False
+            current_collision_cones=self.collision_cones(obstacle,100)
+            avoiding=100*np.sum(current_collision_cones<0)/current_collision_cones.shape[0]
+            if(avoiding>99.9):
+                return False
             if r @ v < 0:
                 return True
 

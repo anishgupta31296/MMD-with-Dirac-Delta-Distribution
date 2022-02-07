@@ -133,10 +133,10 @@ class PVO:
         current_collision_cones=Agent.collision_cones(Obstacles,100)
         colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
         print(colliding)
-        if(colliding>99):
-            dt=Agent.dt*22*colliding/100
+        if(colliding>90 and abs(Agent.get_angular_velocity())<0.15):
+            dt=Agent.dt*30*colliding/100
         else:
-            dt=Agent.dt
+            dt=2.5*Agent.dt
         self.collision_cones_list= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,dt,Agent.controls_samples)
         self.mu=np.mean(self.collision_cones_list, axis=1)
         self.sigma=np.std(self.collision_cones_list, axis=1)
@@ -184,6 +184,12 @@ class KLD:
     def __init__(self, k, samples_param,device):
         self.k=k
         self.samples=samples_param
+        if(self.k==0):
+            self.desired_mean=0
+            self.desired_std=0.00000000001
+        else:
+            self.desired_mean=-2.5
+            self.desired_std=1.41414
         self.device = device
 
     @staticmethod
@@ -196,36 +202,31 @@ class KLD:
 
     def get_kld_cost(self, cones):
         gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
-        desired_mean = -2.5
-        desired_std = 1.41414
         gmm.fit(cones)
         gmm_cone_probs = gmm.score_samples(cones).reshape(-1, 1)
-        kld = np.sum((gmm_cone_probs - np.log(self.gaussian_prob(desired_mean, desired_std, cones))) * np.exp(gmm_cone_probs))
+        kld = np.sum((gmm_cone_probs - np.log(self.gaussian_prob(self.desired_mean, self.desired_std, cones))) * np.exp(gmm_cone_probs))
         return kld
 
     def get_cost(self,Agent,Obstacles):
         dt=Agent.dt
-        '''
         current_collision_cones=Agent.collision_cones(Obstacles,100)
         colliding=100*np.sum(current_collision_cones>0)/current_collision_cones.shape[0]
-        if(colliding>96):
+        print(colliding)
+
+        if(colliding>90):
             dt=Agent.dt*22*colliding/100
         else:
-            dt=Agent.dt
-        '''
+            dt=Agent.dt*2.5
+
         self.collision_cones_list= self.collision_cones(Agent.lin_ctrl, Agent.ang_ctrl,Agent.head_samples, Agent.get_linear_velocity(), Agent.get_angular_velocity(),  Agent.position_samples, Obstacles.position_samples, Obstacles.velocity_samples,Agent.radius+Obstacles.radius,dt,Agent.controls_samples)
         self.cones = np.sort(self.collision_cones_list,axis=1)
-        #gmm = mixture.GaussianMixture(n_components=3, covariance_type='full')
-        #desired_mean = -2.5
-        #desired_std = 1.41414
+        if(self.k==0):
+            self.cones[self.cones<0]=0
         kld=[]
         for i in range(self.cones.shape[0]):
             cones1=self.cones[i,:].reshape(-1, 1)
             kld_cost=self.get_kld_cost(cones1)
             kld.append(kld_cost)
-            #gmm.fit(cones.reshape(-1, 1))
-            #gmm_cone_probs = gmm.score_samples(cones1)
-            #kld.append( (gmm_cone_probs - np.log(self.gaussian_prob(desired_mean, desired_std, cones1))) * np.exp(gmm_cone_probs) )
         return kld
 
 
@@ -246,3 +247,4 @@ class KLD:
         cones=np.square(np.sum(vr*rr, axis=3))+ np.sum(np.square(vr), axis=3)*((R)**2 - np.sum(np.square(rr), axis=3))
         cones=cones.reshape(lin_ctrl.shape[0],self.samples*self.samples)
         return cones
+
