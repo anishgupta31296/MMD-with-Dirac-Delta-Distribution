@@ -7,7 +7,7 @@ Planner(param=1,samples_param=25,optimizer='KLD',device='cuda:0',gaussian_approx
 optimizer can be 'KLD', 'PVO', 'MMD_Dirac_Delta'
 The parameter gaussain_approximation decides whether to use gaussian approximation for the non-parametric noise
 
-The following explains why our algorithm works better than the other baselines:
+The following explains why our algorithm works better than the baselines:
 https://youtu.be/BBQatGRawQM
 
 Effect of value of RBF kernels hyperparameter:
