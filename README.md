@@ -11,7 +11,32 @@ The following explains why our algorithm works better than the other baselines:
 https://youtu.be/BBQatGRawQM
 
 Effect of value of RBF kernels hyperparameter:
-1. Gamme = 0.1
-https://user-images.githubusercontent.com/27779024/166189868-536f34eb-e86d-4189-8010-594894c7e97f.mp4
-https://user-images.githubusercontent.com/27779024/166189874-08d7f802-520b-4775-9eb5-cde74b91378c.mp4
+1. Gamma = 0.1
 
+https://user-images.githubusercontent.com/27779024/166197857-b8b30ee4-784a-45e7-80cc-20b3f08b1640.mp4
+
+
+2. Gamma = 1.0
+
+https://user-images.githubusercontent.com/27779024/166197916-984095a8-fa72-4cef-8d6e-824d3da0050e.mp4
+
+
+3. Gamma = 5.0
+
+https://user-images.githubusercontent.com/27779024/166197974-4dee6c68-5451-4e0a-84be-a4f606fc65b7.mp4
+
+
+Other Qualitative Results:
+1. 2 obstacle case
+
+https://user-images.githubusercontent.com/27779024/166198043-20213450-8b4b-4211-a47d-ff8a51884967.mp4
+
+
+2. 3 obstacles case 
+
+https://user-images.githubusercontent.com/27779024/166198079-6bfba900-5ecb-4582-9754-c41b989d3af1.mp4
+
+
+3. 4 obstacles case
+
+https://user-images.githubusercontent.com/27779024/166198104-77035dcb-d7cf-4fc5-8c47-8fbacb6f1c73.mp4
