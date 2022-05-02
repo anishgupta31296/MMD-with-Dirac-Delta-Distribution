@@ -10,6 +10,8 @@ The parameter gaussain_approximation decides whether to use gaussian approximati
 The following explains why our algorithm works better than the baselines:
 https://youtu.be/BBQatGRawQM
 
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/BBQatGRawQM/maxresdefault.jpg)](https://www.youtube.com/watch?v=BBQatGRawQM)
+
 Effect of value of RBF kernels hyperparameter:
 1. Gamma = 0.1
 
