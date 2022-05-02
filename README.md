@@ -10,3 +10,4 @@ The parameter gaussain_approximation decides whether to use gaussian approximati
 The following explains why our algorithm works better than the other baselines:
 https://youtu.be/BBQatGRawQM
 
+Effect of value of \gamma
