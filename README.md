@@ -10,4 +10,8 @@ The parameter gaussain_approximation decides whether to use gaussian approximati
 The following explains why our algorithm works better than the other baselines:
 https://youtu.be/BBQatGRawQM
 
-Effect of value of \gamma
+Effect of value of RBF kernels hyperparameter:
+1. Gamme = 0.1
+https://user-images.githubusercontent.com/27779024/166189868-536f34eb-e86d-4189-8010-594894c7e97f.mp4
+https://user-images.githubusercontent.com/27779024/166189874-08d7f802-520b-4775-9eb5-cde74b91378c.mp4
+
