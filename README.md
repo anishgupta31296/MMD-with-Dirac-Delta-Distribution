@@ -42,3 +42,9 @@ https://user-images.githubusercontent.com/27779024/166198079-6bfba900-5ecb-4582-
 3. 4 obstacles case
 
 https://user-images.githubusercontent.com/27779024/166198104-77035dcb-d7cf-4fc5-8c47-8fbacb6f1c73.mp4
+
+4. 7 Obstacles case
+
+https://user-images.githubusercontent.com/27779024/174800450-8a4929bc-9fc6-4d2d-93f9-634906b53343.mp4
+
+
