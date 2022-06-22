@@ -49,6 +49,7 @@ https://user-images.githubusercontent.com/27779024/166198104-77035dcb-d7cf-4fc5-
 https://user-images.githubusercontent.com/27779024/174946763-83b90ae0-9ddc-466b-9cdc-47967a45fc53.mp4
 
 5 Obsacles Case with Different Noise Types:
+
 ia) Noise:
 
 ![dist_1](https://user-images.githubusercontent.com/27779024/174952907-89501205-6a1d-4ca6-8d04-66eba1ac041d.png)
@@ -57,5 +58,18 @@ ib) Collision Avoidance Video:
 
 https://user-images.githubusercontent.com/27779024/174952952-db4fe0e6-dbe7-488c-9559-01d0e7e0a7b8.mp4
 
+iia) Noise:
 
+![dist_7](https://user-images.githubusercontent.com/27779024/174953133-7095d33b-911e-4adf-a356-b031419b8143.png)
 
+iib) Collision Avoidance Video:
+
+https://user-images.githubusercontent.com/27779024/174953203-a8ccf4a4-e1b7-4e2f-a03d-8cec752412f3.mp4
+
+iiia) Noise:
+
+![dist_9](https://user-images.githubusercontent.com/27779024/174953266-756d8a57-f259-4d36-b40b-27eee2d1cbc5.png)
+
+iiib) Collision Avoidance Video:
+
+https://user-images.githubusercontent.com/27779024/174953322-24abde44-8fd4-4726-a5e6-6b3f8f599a09.mp4
