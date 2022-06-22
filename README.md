@@ -43,8 +43,8 @@ https://user-images.githubusercontent.com/27779024/166198079-6bfba900-5ecb-4582-
 
 https://user-images.githubusercontent.com/27779024/166198104-77035dcb-d7cf-4fc5-8c47-8fbacb6f1c73.mp4
 
+
 4. 7 Obstacles case
 
-
-
+https://user-images.githubusercontent.com/27779024/174946763-83b90ae0-9ddc-466b-9cdc-47967a45fc53.mp4
 
